@@ -285,6 +285,7 @@ async function openChannel(channelId, title) {
 
   history.pushState({ screen: "channelDetail", channelId, channelTitle: title }, "");
   showScreen("channelDetail");
+  document.getElementById("channel-detail-screen").scrollTop = 0;
   await loadVideos(false);
 }
 
