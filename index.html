@@ -34,6 +34,42 @@
       <div id="channels-grid" class="channels-grid"></div>
     </section>
 
+    <section id="channel-detail-screen" class="screen hidden">
+      <div class="detail-header">
+        <button id="back-to-channels" class="back-button">← Channels</button>
+        <h2 id="channel-detail-title"></h2>
+        <div class="sort-toggle">
+          <button id="sort-new" class="sort-btn active">New</button>
+          <button id="sort-popular" class="sort-btn">Popular</button>
+        </div>
+      </div>
+      <div id="videos-grid" class="videos-grid"></div>
+      <div id="load-more-container" class="load-more-container hidden">
+        <button id="load-more-button" class="big-button">Load more</button>
+      </div>
+    </section>
+
+    <section id="player-screen" class="screen hidden">
+      <div class="player-header">
+        <button id="back-to-channel" class="back-button">← Back</button>
+        <div id="timer-display" class="timer-display"></div>
+      </div>
+      <div class="player-wrapper">
+        <iframe id="youtube-player" src="" frameborder="0"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div id="timesup-overlay" class="timesup-overlay hidden">
+        <div class="timesup-card">
+          <div class="timesup-emoji">🎉</div>
+          <h2>Time's up!</h2>
+          <p>Great watching! Come back later for more.</p>
+          <button id="timesup-back" class="big-button">Back to channels</button>
+        </div>
+      </div>
+    </section>
+
     <section id="error-screen" class="screen hidden">
       <p id="error-message" class="error"></p>
       <button id="retry-button" class="big-button">Try again</button>
