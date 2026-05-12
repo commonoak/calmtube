@@ -37,8 +37,16 @@
   <div id="parent-reset-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <h3>Parent Reset</h3>
-      <input id="parent-reset-input" type="number" inputmode="numeric"
-        class="code-input" placeholder="••••" maxlength="4">
+      <div class="pin-wrap">
+        <div class="pin-display" id="pin-display">
+          <div class="pin-box" id="pin-0"></div>
+          <div class="pin-box" id="pin-1"></div>
+          <div class="pin-box" id="pin-2"></div>
+          <div class="pin-box" id="pin-3"></div>
+        </div>
+        <input id="parent-reset-input" type="tel" inputmode="numeric" maxlength="4"
+          class="pin-hidden-input" autocomplete="off" pattern="[0-9]*">
+      </div>
       <p id="parent-reset-error" class="modal-error hidden">Wrong code. Try again.</p>
       <p class="preset-label">Set timer to</p>
       <div class="time-presets">
@@ -58,11 +66,19 @@
 
   <main>
     <section id="login-screen" class="screen">
-      <div class="login-card">
-        <div class="login-logo">📺</div>
-        <h2>Welcome to CalmTube</h2>
-        <p>Sign in to see your channels.</p>
-        <button id="login-button" class="big-button">Sign in with Google</button>
+      <div class="hero">
+        <p class="hero-eyebrow">A focused viewer for YouTube</p>
+        <h1 class="hero-headline">Great content.<br>Zero distractions.</h1>
+        <p class="hero-sub">YouTube has incredible channels — but it's built like a slot machine. CalmTube shows only what you subscribe to. No autoplay, no algorithm, no rabbit holes.</p>
+        <ul class="hero-features">
+          <li>Your subscribed channels, and nothing else</li>
+          <li>No autoplay, suggestions, or recommendations</li>
+          <li>Built-in timer that nudges kids to go outside</li>
+        </ul>
+        <div class="hero-cta">
+          <button id="login-button" class="big-button">Sign in with Google</button>
+          <p class="cta-note">Uses your existing YouTube subscriptions</p>
+        </div>
       </div>
     </section>
 

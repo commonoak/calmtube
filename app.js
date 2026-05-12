@@ -172,6 +172,18 @@ function resetTimer(durationSeconds) {
 // ── Parent reset modal ──
 let resetModalOrigin = "header"; // "header" | "timesup"
 
+function updatePinDisplay() {
+  const input = document.getElementById("parent-reset-input");
+  const val = input.value.replace(/\D/g, "").slice(0, 4);
+  input.value = val;
+  const focused = document.activeElement === input;
+  for (let i = 0; i < 4; i++) {
+    const box = document.getElementById(`pin-${i}`);
+    box.classList.toggle("filled", i < val.length);
+    box.classList.toggle("active", focused && i === val.length && val.length < 4);
+  }
+}
+
 function openResetModal(origin = "header") {
   resetModalOrigin = origin;
   selectedMinutes = Math.round(CONFIG.WATCH_TIMER_SECONDS / 60);
@@ -179,6 +191,7 @@ function openResetModal(origin = "header") {
     btn.classList.toggle("active", parseInt(btn.dataset.minutes) === selectedMinutes);
   });
   document.getElementById("parent-reset-input").value = "";
+  updatePinDisplay();
   document.getElementById("parent-reset-error").classList.add("hidden");
   document.getElementById("parent-reset-modal").classList.remove("hidden");
   setTimeout(() => document.getElementById("parent-reset-input").focus(), 100);
@@ -476,7 +489,17 @@ document.querySelectorAll(".preset-btn").forEach(btn => {
   });
 });
 
-// Allow pressing Enter in the code input
+// PIN input: update dots, auto-submit on 4 digits
+document.getElementById("parent-reset-input").addEventListener("input", () => {
+  updatePinDisplay();
+  if (document.getElementById("parent-reset-input").value.length === 4) {
+    setTimeout(confirmReset, 180);
+  }
+});
+document.getElementById("parent-reset-input").addEventListener("focus", updatePinDisplay);
+document.getElementById("parent-reset-input").addEventListener("blur", () => {
+  for (let i = 0; i < 4; i++) document.getElementById(`pin-${i}`).classList.remove("active");
+});
 document.getElementById("parent-reset-input").addEventListener("keydown", e => {
   if (e.key === "Enter") confirmReset();
 });
