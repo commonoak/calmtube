@@ -60,12 +60,99 @@
           allowfullscreen>
         </iframe>
       </div>
-      <div id="timesup-overlay" class="timesup-overlay hidden">
-        <div class="timesup-card">
-          <div class="timesup-emoji">🎉</div>
-          <h2>Time's up!</h2>
-          <p>Great watching! Come back later for more.</p>
-          <button id="timesup-back" class="big-button">Back to channels</button>
+    </section>
+
+    <section id="timesup-screen" class="screen hidden">
+      <div class="timesup-content">
+        <h1 class="timesup-heading">Time to go outside!</h1>
+        <p class="timesup-subtext">You watched enough for today. The garden is waiting!</p>
+        <div class="timesup-illustration">
+          <svg viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Sky -->
+            <rect width="500" height="210" fill="#87CEEB"/>
+            <!-- Ground -->
+            <rect y="200" width="500" height="100" fill="#5AAD4E"/>
+            <rect y="228" width="500" height="72" fill="#4CAF50"/>
+            <!-- Sun -->
+            <circle cx="445" cy="55" r="42" fill="#FFD54F" opacity="0.35"/>
+            <circle cx="445" cy="55" r="32" fill="#FFD54F"/>
+            <!-- Clouds -->
+            <ellipse cx="88" cy="72" rx="46" ry="22" fill="white"/>
+            <ellipse cx="116" cy="58" rx="30" ry="20" fill="white"/>
+            <ellipse cx="60" cy="68" rx="26" ry="18" fill="white"/>
+            <ellipse cx="295" cy="52" rx="50" ry="22" fill="white"/>
+            <ellipse cx="325" cy="40" rx="28" ry="18" fill="white"/>
+            <ellipse cx="267" cy="55" rx="28" ry="18" fill="white"/>
+            <!-- Chimney -->
+            <rect x="143" y="103" width="18" height="38" fill="#9E9E9E" rx="2"/>
+            <circle cx="152" cy="97" r="7" fill="white" opacity="0.75"/>
+            <circle cx="158" cy="87" r="5" fill="white" opacity="0.5"/>
+            <!-- Roof -->
+            <polygon points="36,148 115,88 194,148" fill="#D32F2F"/>
+            <!-- Walls -->
+            <rect x="52" y="148" width="126" height="75" fill="#FFF9C4" rx="3"/>
+            <!-- Windows -->
+            <rect x="64" y="160" width="34" height="30" fill="#90CAF9" rx="3"/>
+            <line x1="81" y1="160" x2="81" y2="190" stroke="white" stroke-width="2"/>
+            <line x1="64" y1="175" x2="98" y2="175" stroke="white" stroke-width="2"/>
+            <rect x="132" y="160" width="34" height="30" fill="#90CAF9" rx="3"/>
+            <line x1="149" y1="160" x2="149" y2="190" stroke="white" stroke-width="2"/>
+            <line x1="132" y1="175" x2="166" y2="175" stroke="white" stroke-width="2"/>
+            <!-- Door -->
+            <rect x="93" y="183" width="40" height="40" fill="#795548" rx="4 4 0 0"/>
+            <circle cx="127" cy="204" r="3" fill="#FFD54F"/>
+            <!-- Tree -->
+            <rect x="222" y="182" width="12" height="42" fill="#6D4C41"/>
+            <circle cx="228" cy="162" r="38" fill="#2E7D32"/>
+            <circle cx="215" cy="154" r="20" fill="#388E3C"/>
+            <!-- Fence -->
+            <rect x="198" y="200" width="8" height="28" fill="white" rx="2"/>
+            <polygon points="198,200 202,192 206,200" fill="white"/>
+            <rect x="213" y="200" width="8" height="28" fill="white" rx="2"/>
+            <polygon points="213,200 217,192 221,200" fill="white"/>
+            <rect x="198" y="208" width="24" height="4" fill="white"/>
+            <rect x="198" y="219" width="24" height="4" fill="white"/>
+            <!-- Flowers -->
+            <circle cx="30" cy="214" r="7" fill="#F06292"/>
+            <circle cx="30" cy="214" r="3" fill="#FFD54F"/>
+            <circle cx="48" cy="210" r="6" fill="#BA68C8"/>
+            <circle cx="48" cy="210" r="3" fill="#FFD54F"/>
+            <circle cx="415" cy="214" r="7" fill="#FF7043"/>
+            <circle cx="415" cy="214" r="3" fill="#FFD54F"/>
+            <circle cx="435" cy="210" r="6" fill="#4FC3F7"/>
+            <circle cx="435" cy="210" r="3" fill="#FFD54F"/>
+            <!-- Kid 1 (blue, kicking) -->
+            <circle cx="318" cy="174" r="13" fill="#FFCC80"/>
+            <ellipse cx="318" cy="166" rx="13" ry="8" fill="#5D4037"/>
+            <circle cx="314" cy="173" r="2" fill="#333"/>
+            <circle cx="322" cy="173" r="2" fill="#333"/>
+            <path d="M 314 178 Q 318 182 322 178" stroke="#333" stroke-width="1.5" fill="none"/>
+            <rect x="309" y="187" width="18" height="22" fill="#1E88E5" rx="5"/>
+            <rect x="309" y="206" width="18" height="11" fill="#1565C0" rx="2"/>
+            <line x1="309" y1="192" x2="295" y2="201" stroke="#FFCC80" stroke-width="5" stroke-linecap="round"/>
+            <line x1="327" y1="192" x2="340" y2="184" stroke="#FFCC80" stroke-width="5" stroke-linecap="round"/>
+            <line x1="313" y1="217" x2="306" y2="238" stroke="#FFCC80" stroke-width="5" stroke-linecap="round"/>
+            <line x1="323" y1="217" x2="346" y2="228" stroke="#FFCC80" stroke-width="5" stroke-linecap="round"/>
+            <ellipse cx="304" cy="239" rx="7" ry="4" fill="#333"/>
+            <ellipse cx="349" cy="230" rx="7" ry="4" fill="#333"/>
+            <!-- Kid 2 (red, arms up) -->
+            <circle cx="392" cy="172" r="13" fill="#FFCC80"/>
+            <ellipse cx="392" cy="164" rx="13" ry="8" fill="#F4A460"/>
+            <circle cx="388" cy="171" r="2" fill="#333"/>
+            <circle cx="396" cy="171" r="2" fill="#333"/>
+            <path d="M 388 176 Q 392 180 396 176" stroke="#333" stroke-width="1.5" fill="none"/>
+            <rect x="383" y="185" width="18" height="22" fill="#E53935" rx="5"/>
+            <rect x="383" y="204" width="18" height="11" fill="#B71C1C" rx="2"/>
+            <line x1="383" y1="190" x2="368" y2="182" stroke="#FFCC80" stroke-width="5" stroke-linecap="round"/>
+            <line x1="401" y1="190" x2="412" y2="182" stroke="#FFCC80" stroke-width="5" stroke-linecap="round"/>
+            <line x1="387" y1="215" x2="380" y2="238" stroke="#FFCC80" stroke-width="5" stroke-linecap="round"/>
+            <line x1="398" y1="215" x2="404" y2="238" stroke="#FFCC80" stroke-width="5" stroke-linecap="round"/>
+            <ellipse cx="378" cy="239" rx="7" ry="4" fill="#333"/>
+            <ellipse cx="406" cy="239" rx="7" ry="4" fill="#333"/>
+            <!-- Soccer ball -->
+            <circle cx="360" cy="242" r="12" fill="white" stroke="#333" stroke-width="1.5"/>
+            <polygon points="360,232 366,237 364,244 356,244 354,237" fill="#333"/>
+          </svg>
         </div>
       </div>
     </section>

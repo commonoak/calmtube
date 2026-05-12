@@ -1,5 +1,26 @@
 // CalmTube — main app logic
 
+// --- Token persistence ---
+const TOKEN_KEY = "calmtube_token";
+const TOKEN_EXPIRY_KEY = "calmtube_token_expiry";
+
+function storeToken(token) {
+  localStorage.setItem(TOKEN_KEY, token);
+  // Tokens last 3600s — store expiry 5 min early to avoid edge cases
+  localStorage.setItem(TOKEN_EXPIRY_KEY, Date.now() + 55 * 60 * 1000);
+}
+
+function getStoredToken() {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const expiry = parseInt(localStorage.getItem(TOKEN_EXPIRY_KEY) || "0");
+  return token && Date.now() < expiry ? token : null;
+}
+
+function clearStoredToken() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+}
+
 // --- State ---
 let accessToken = null;
 let tokenClient = null;
@@ -17,6 +38,7 @@ const screens = {
   channels: document.getElementById("channels-screen"),
   channelDetail: document.getElementById("channel-detail-screen"),
   player: document.getElementById("player-screen"),
+  timesup: document.getElementById("timesup-screen"),
   error: document.getElementById("error-screen"),
 };
 
@@ -31,23 +53,41 @@ function showError(message) {
 }
 
 // --- Google Auth ---
+function handleAuthResponse(response) {
+  if (response.error) {
+    // Silent auth failed — show login button so user can sign in manually
+    clearStoredToken();
+    showScreen("login");
+    return;
+  }
+  accessToken = response.access_token;
+  storeToken(response.access_token);
+  loadSubscriptions();
+}
+
 function initGoogleAuth() {
   if (!window.google || !window.google.accounts) {
     setTimeout(initGoogleAuth, 100);
     return;
   }
+
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CONFIG.GOOGLE_CLIENT_ID,
     scope: "https://www.googleapis.com/auth/youtube.readonly",
-    callback: (response) => {
-      if (response.error) {
-        showError("Login failed. Please try again.");
-        return;
-      }
-      accessToken = response.access_token;
-      loadSubscriptions();
-    },
+    callback: handleAuthResponse,
   });
+
+  // Use stored token if still valid
+  const stored = getStoredToken();
+  if (stored) {
+    accessToken = stored;
+    loadSubscriptions();
+    return;
+  }
+
+  // Try silent auth — no popup if user already authorized before
+  showScreen("loading");
+  tokenClient.requestAccessToken({ prompt: "" });
 }
 
 function startLogin() {
@@ -55,7 +95,7 @@ function startLogin() {
     showError("Login is still loading. Please wait a moment and try again.");
     return;
   }
-  tokenClient.requestAccessToken();
+  tokenClient.requestAccessToken({ prompt: "select_account" });
 }
 
 // --- Subscriptions (channel grid) ---
@@ -296,7 +336,7 @@ function openPlayer(videoId) {
 }
 
 function startTimer() {
-  let secondsLeft = CONFIG.WATCH_TIMER_MINUTES * 60;
+  let secondsLeft = CONFIG.WATCH_TIMER_SECONDS;
   updateTimerDisplay(secondsLeft);
 
   timerInterval = setInterval(() => {
@@ -325,7 +365,7 @@ function updateTimerDisplay(seconds) {
 
 function timeIsUp() {
   document.getElementById("youtube-player").src = "";
-  document.getElementById("timesup-overlay").classList.remove("hidden");
+  showScreen("timesup");
 }
 
 // --- Utilities ---
@@ -373,8 +413,4 @@ document.getElementById("back-to-channel").addEventListener("click", () => {
   document.getElementById("youtube-player").src = "";
   showScreen("channelDetail");
 });
-document.getElementById("timesup-back").addEventListener("click", () => {
-  showScreen("channels");
-});
-
 initGoogleAuth();
