@@ -70,11 +70,14 @@ body {
 }
 
 #global-timer-display {
-  font-size: 20px;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 700;
   color: white;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 1px;
+  letter-spacing: 0;
+}
+
+#global-timer-display.timer-warning {
+  color: #FCA5A5;
 }
 
 .parent-reset-btn {
@@ -590,11 +593,14 @@ main {
 }
 
 #player-timer-display {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 700;
   color: white;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 1px;
+  letter-spacing: 0;
+}
+
+#player-timer-display.timer-warning {
+  color: #FCA5A5;
 }
 
 .player-wrapper {

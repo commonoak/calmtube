@@ -1,20 +1,25 @@
 // CalmTube — main app logic
 
 // ── Storage keys ──
-const TOKEN_KEY         = "calmtube_token";
-const TOKEN_EXPIRY_KEY  = "calmtube_token_expiry";
-const TIMER_START_KEY   = "calmtube_timer_start";
+const TOKEN_KEY          = "calmtube_token";
+const TOKEN_EXPIRY_KEY   = "calmtube_token_expiry";
+const HAS_CONSENT_KEY    = "calmtube_has_consent";
+const TIMER_START_KEY    = "calmtube_timer_start";
 const TIMER_DURATION_KEY = "calmtube_timer_duration";
 
 // ── Token helpers ──
 function storeToken(token) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(TOKEN_EXPIRY_KEY, Date.now() + 55 * 60 * 1000);
+  localStorage.setItem(HAS_CONSENT_KEY, "1");
 }
 function getStoredToken() {
   const token  = localStorage.getItem(TOKEN_KEY);
   const expiry = parseInt(localStorage.getItem(TOKEN_EXPIRY_KEY) || "0");
   return token && Date.now() < expiry ? token : null;
+}
+function hasConsentHistory() {
+  return !!localStorage.getItem(HAS_CONSENT_KEY);
 }
 function clearStoredToken() {
   localStorage.removeItem(TOKEN_KEY);
@@ -70,7 +75,13 @@ function showError(message) {
 }
 
 // ── Google Auth ──
+let silentRefreshTimeout = null;
+
 function handleAuthResponse(response) {
+  if (silentRefreshTimeout) {
+    clearTimeout(silentRefreshTimeout);
+    silentRefreshTimeout = null;
+  }
   if (response.error) {
     clearStoredToken();
     showScreen("login");
@@ -91,12 +102,27 @@ function initGoogleAuth() {
     scope: "https://www.googleapis.com/auth/youtube.readonly",
     callback: handleAuthResponse,
   });
+
   const stored = getStoredToken();
   if (stored) {
     accessToken = stored;
     loadSubscriptions();
     return;
   }
+
+  // Token expired but user has signed in before — try silent refresh.
+  // If Google session is still active it returns a new token with no UI.
+  // If it fails or hangs, the timeout falls back to the login screen.
+  if (hasConsentHistory()) {
+    showScreen("loading");
+    silentRefreshTimeout = setTimeout(() => {
+      silentRefreshTimeout = null;
+      showScreen("login");
+    }, 2500);
+    tokenClient.requestAccessToken({ prompt: "none" });
+    return;
+  }
+
   showScreen("login");
 }
 
@@ -146,11 +172,16 @@ function runTimer(startSeconds) {
 }
 
 function updateTimerDisplays(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  const text = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  document.getElementById("global-timer-display").textContent  = text;
-  document.getElementById("player-timer-display").textContent  = text;
+  const m = seconds <= 0 ? 0 : Math.ceil(seconds / 60);
+  const text = `${m} min left`;
+  const isWarning = seconds > 0 && seconds <= 300;
+
+  const globalEl = document.getElementById("global-timer-display");
+  const playerEl = document.getElementById("player-timer-display");
+  globalEl.textContent = text;
+  playerEl.textContent = text;
+  globalEl.classList.toggle("timer-warning", isWarning);
+  playerEl.classList.toggle("timer-warning", isWarning);
 }
 
 function timeIsUp() {
