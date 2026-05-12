@@ -30,6 +30,9 @@ body {
   background: linear-gradient(135deg, #047857, #059669);
   flex-shrink: 0;
   box-shadow: 0 2px 12px rgba(4, 120, 87, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }
 
 .header-logo {
