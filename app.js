@@ -1,49 +1,65 @@
 // CalmTube — main app logic
 
-// --- Token persistence ---
-const TOKEN_KEY = "calmtube_token";
-const TOKEN_EXPIRY_KEY = "calmtube_token_expiry";
+// ── Storage keys ──
+const TOKEN_KEY         = "calmtube_token";
+const TOKEN_EXPIRY_KEY  = "calmtube_token_expiry";
+const TIMER_START_KEY   = "calmtube_timer_start";
+const TIMER_DURATION_KEY = "calmtube_timer_duration";
 
+// ── Token helpers ──
 function storeToken(token) {
   localStorage.setItem(TOKEN_KEY, token);
-  // Tokens last 3600s — store expiry 5 min early to avoid edge cases
   localStorage.setItem(TOKEN_EXPIRY_KEY, Date.now() + 55 * 60 * 1000);
 }
-
 function getStoredToken() {
-  const token = localStorage.getItem(TOKEN_KEY);
+  const token  = localStorage.getItem(TOKEN_KEY);
   const expiry = parseInt(localStorage.getItem(TOKEN_EXPIRY_KEY) || "0");
   return token && Date.now() < expiry ? token : null;
 }
-
 function clearStoredToken() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(TOKEN_EXPIRY_KEY);
 }
 
-// --- State ---
-let accessToken = null;
-let tokenClient = null;
-let currentChannelId = null;
-let currentChannelTitle = null;
-let currentSort = "new";
-let uploadsPlaylistId = null;
-let nextPageToken = null;
-let timerInterval = null;
+// ── Timer helpers ──
+function saveTimerStart(durationSeconds) {
+  localStorage.setItem(TIMER_START_KEY,    Date.now().toString());
+  localStorage.setItem(TIMER_DURATION_KEY, durationSeconds.toString());
+}
+function getRemainingSeconds() {
+  const start    = parseInt(localStorage.getItem(TIMER_START_KEY)    || "0");
+  const duration = parseInt(localStorage.getItem(TIMER_DURATION_KEY) || "0");
+  if (!start || !duration) return null;
+  return Math.max(0, duration - Math.floor((Date.now() - start) / 1000));
+}
+function clearTimerStorage() {
+  localStorage.removeItem(TIMER_START_KEY);
+  localStorage.removeItem(TIMER_DURATION_KEY);
+}
 
-// --- Screen management ---
+// ── State ──
+let accessToken        = null;
+let tokenClient        = null;
+let currentChannelId   = null;
+let currentChannelTitle = null;
+let currentSort        = "new";
+let uploadsPlaylistId  = null;
+let nextPageToken      = null;
+let timerInterval      = null;
+
+// ── Screen management ──
 const screens = {
-  login: document.getElementById("login-screen"),
-  loading: document.getElementById("loading-screen"),
-  channels: document.getElementById("channels-screen"),
+  login:         document.getElementById("login-screen"),
+  loading:       document.getElementById("loading-screen"),
+  channels:      document.getElementById("channels-screen"),
   channelDetail: document.getElementById("channel-detail-screen"),
-  player: document.getElementById("player-screen"),
-  timesup: document.getElementById("timesup-screen"),
-  error: document.getElementById("error-screen"),
+  player:        document.getElementById("player-screen"),
+  timesup:       document.getElementById("timesup-screen"),
+  error:         document.getElementById("error-screen"),
 };
 
 function showScreen(name) {
-  Object.values(screens).forEach((s) => s.classList.add("hidden"));
+  Object.values(screens).forEach(s => s.classList.add("hidden"));
   screens[name].classList.remove("hidden");
 }
 
@@ -52,10 +68,9 @@ function showError(message) {
   showScreen("error");
 }
 
-// --- Google Auth ---
+// ── Google Auth ──
 function handleAuthResponse(response) {
   if (response.error) {
-    // Silent auth failed — show login button so user can sign in manually
     clearStoredToken();
     showScreen("login");
     return;
@@ -70,21 +85,17 @@ function initGoogleAuth() {
     setTimeout(initGoogleAuth, 100);
     return;
   }
-
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CONFIG.GOOGLE_CLIENT_ID,
     scope: "https://www.googleapis.com/auth/youtube.readonly",
     callback: handleAuthResponse,
   });
-
-  // Use stored token if still valid, otherwise show login screen
   const stored = getStoredToken();
   if (stored) {
     accessToken = stored;
     loadSubscriptions();
     return;
   }
-
   showScreen("login");
 }
 
@@ -96,7 +107,90 @@ function startLogin() {
   tokenClient.requestAccessToken({ prompt: "select_account" });
 }
 
-// --- Subscriptions (channel grid) ---
+// ── Global timer ──
+function startGlobalTimer() {
+  const remaining = getRemainingSeconds();
+
+  if (remaining === null) {
+    // Fresh session — start a new timer
+    saveTimerStart(CONFIG.WATCH_TIMER_SECONDS);
+    runTimer(CONFIG.WATCH_TIMER_SECONDS);
+  } else if (remaining === 0) {
+    // Already expired (e.g. they refreshed after time was up)
+    clearTimerStorage();
+    timeIsUp();
+    return;
+  } else {
+    // Resume from where we left off
+    runTimer(remaining);
+  }
+
+  document.getElementById("global-timer").classList.remove("hidden");
+}
+
+function runTimer(startSeconds) {
+  let remaining = startSeconds;
+  updateTimerDisplays(remaining);
+
+  timerInterval = setInterval(() => {
+    remaining--;
+    updateTimerDisplays(remaining);
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      clearTimerStorage();
+      timeIsUp();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplays(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  const text = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  document.getElementById("global-timer-display").textContent  = text;
+  document.getElementById("player-timer-display").textContent  = text;
+}
+
+function timeIsUp() {
+  document.getElementById("youtube-player").src = "";
+  showScreen("timesup");
+}
+
+function resetTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  clearTimerStorage();
+  startGlobalTimer();
+}
+
+// ── Parent reset modal ──
+function openResetModal() {
+  document.getElementById("parent-reset-input").value = "";
+  document.getElementById("parent-reset-error").classList.add("hidden");
+  document.getElementById("parent-reset-modal").classList.remove("hidden");
+  setTimeout(() => document.getElementById("parent-reset-input").focus(), 100);
+}
+
+function closeResetModal() {
+  document.getElementById("parent-reset-modal").classList.add("hidden");
+}
+
+function confirmReset() {
+  const entered = document.getElementById("parent-reset-input").value;
+  if (entered === CONFIG.PARENT_CODE) {
+    closeResetModal();
+    resetTimer();
+  } else {
+    document.getElementById("parent-reset-error").classList.remove("hidden");
+    document.getElementById("parent-reset-input").value = "";
+    document.getElementById("parent-reset-input").focus();
+  }
+}
+
+// ── Subscriptions ──
 async function loadSubscriptions() {
   showScreen("loading");
   try {
@@ -109,37 +203,31 @@ async function loadSubscriptions() {
       url.searchParams.set("maxResults", "50");
       url.searchParams.set("order", "alphabetical");
       if (pageToken) url.searchParams.set("pageToken", pageToken);
-
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!response.ok) throw new Error(`YouTube API error: ${response.status}`);
-      const data = await response.json();
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const data = await res.json();
       subscriptions.push(...data.items);
       pageToken = data.nextPageToken || "";
     } while (pageToken);
 
     renderChannels(subscriptions);
+    startGlobalTimer();
   } catch (err) {
     console.error(err);
     showError("Could not load channels. Please try again.");
   }
 }
 
-
-
 function renderChannels(subscriptions) {
   const grid = document.getElementById("channels-grid");
   grid.innerHTML = "";
-
   if (subscriptions.length === 0) {
-    grid.innerHTML =
-      '<p style="grid-column:1/-1;text-align:center;color:#6b7280;">No subscribed channels found.</p>';
+    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#6b7280;padding:40px 0;">No subscribed channels found.</p>';
   } else {
-    subscriptions.forEach((sub) => {
+    subscriptions.forEach(sub => {
       const channelId = sub.snippet.resourceId.channelId;
-      const title = sub.snippet.title;
-      const thumb = sub.snippet.thumbnails.medium.url;
+      const title     = sub.snippet.title;
+      const thumb     = sub.snippet.thumbnails.medium.url;
       const card = document.createElement("div");
       card.className = "channel-card";
       card.innerHTML = `
@@ -154,13 +242,13 @@ function renderChannels(subscriptions) {
   showScreen("channels");
 }
 
-// --- Channel detail ---
+// ── Channel detail ──
 async function openChannel(channelId, title) {
-  currentChannelId = channelId;
+  currentChannelId    = channelId;
   currentChannelTitle = title;
-  currentSort = "new";
-  uploadsPlaylistId = null;
-  nextPageToken = null;
+  currentSort         = "new";
+  uploadsPlaylistId   = null;
+  nextPageToken       = null;
 
   document.getElementById("channel-detail-title").textContent = title;
   document.getElementById("sort-new").classList.add("active");
@@ -176,20 +264,15 @@ async function openChannel(channelId, title) {
 async function loadVideos(append) {
   if (!append) {
     document.getElementById("videos-grid").innerHTML =
-      '<p style="grid-column:1/-1;color:#6b7280;padding:8px 0;">Loading videos...</p>';
+      '<p style="grid-column:1/-1;color:#9CA3AF;padding:20px 0;font-weight:600;">Loading videos…</p>';
   }
   document.getElementById("load-more-container").classList.add("hidden");
-
   try {
-    if (currentSort === "new") {
-      await fetchNewVideos(append);
-    } else {
-      await fetchPopularVideos(append);
-    }
+    currentSort === "new" ? await fetchNewVideos(append) : await fetchPopularVideos(append);
   } catch (err) {
     console.error(err);
     document.getElementById("videos-grid").innerHTML =
-      '<p style="grid-column:1/-1;color:#dc2626;">Could not load videos. Please go back and try again.</p>';
+      '<p style="grid-column:1/-1;color:#DC2626;padding:20px 0;">Could not load videos. Go back and try again.</p>';
   }
 }
 
@@ -198,9 +281,7 @@ async function getUploadsPlaylistId(channelId) {
   const url = new URL("https://www.googleapis.com/youtube/v3/channels");
   url.searchParams.set("part", "contentDetails");
   url.searchParams.set("id", channelId);
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error(`Channels API error: ${res.status}`);
   const data = await res.json();
   uploadsPlaylistId = data.items[0].contentDetails.relatedPlaylists.uploads;
@@ -214,24 +295,18 @@ async function fetchNewVideos(append) {
   url.searchParams.set("playlistId", playlistId);
   url.searchParams.set("maxResults", "15");
   if (nextPageToken) url.searchParams.set("pageToken", nextPageToken);
-
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!res.ok) throw new Error(`PlaylistItems API error: ${res.status}`);
+  const res  = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error(`PlaylistItems error: ${res.status}`);
   const data = await res.json();
   nextPageToken = data.nextPageToken || null;
-
-  const videoIds = data.items.map((item) => item.snippet.resourceId.videoId);
-  const stats = await fetchVideoStats(videoIds);
-
-  const videos = data.items.map((item) => ({
-    videoId: item.snippet.resourceId.videoId,
-    title: item.snippet.title,
-    thumb: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || "",
-    publishedAt: item.snippet.publishedAt,
+  const videoIds = data.items.map(i => i.snippet.resourceId.videoId);
+  const stats    = await fetchVideoStats(videoIds);
+  const videos   = data.items.map(i => ({
+    videoId:     i.snippet.resourceId.videoId,
+    title:       i.snippet.title,
+    thumb:       i.snippet.thumbnails.high?.url || i.snippet.thumbnails.medium?.url || "",
+    publishedAt: i.snippet.publishedAt,
   }));
-
   renderVideos(videos, stats, append);
 }
 
@@ -243,42 +318,34 @@ async function fetchPopularVideos(append) {
   url.searchParams.set("type", "video");
   url.searchParams.set("maxResults", "15");
   if (nextPageToken) url.searchParams.set("pageToken", nextPageToken);
-
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  const res  = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error(`Search API error: ${res.status}`);
   const data = await res.json();
   nextPageToken = data.nextPageToken || null;
-
-  const videoIds = data.items.map((item) => item.id.videoId);
-  const stats = await fetchVideoStats(videoIds);
-
-  const videos = data.items.map((item) => ({
-    videoId: item.id.videoId,
-    title: item.snippet.title,
-    thumb: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || "",
-    publishedAt: item.snippet.publishedAt,
+  const videoIds = data.items.map(i => i.id.videoId);
+  const stats    = await fetchVideoStats(videoIds);
+  const videos   = data.items.map(i => ({
+    videoId:     i.id.videoId,
+    title:       i.snippet.title,
+    thumb:       i.snippet.thumbnails.high?.url || i.snippet.thumbnails.medium?.url || "",
+    publishedAt: i.snippet.publishedAt,
   }));
-
   renderVideos(videos, stats, append);
 }
 
 async function fetchVideoStats(videoIds) {
-  if (videoIds.length === 0) return {};
+  if (!videoIds.length) return {};
   const url = new URL("https://www.googleapis.com/youtube/v3/videos");
   url.searchParams.set("part", "statistics,contentDetails");
   url.searchParams.set("id", videoIds.join(","));
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  const res  = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   if (!res.ok) return {};
   const data = await res.json();
-  const map = {};
-  data.items.forEach((item) => {
+  const map  = {};
+  data.items.forEach(item => {
     map[item.id] = {
       viewCount: item.statistics.viewCount || "0",
-      duration: parseDuration(item.contentDetails.duration),
+      duration:  parseDuration(item.contentDetails.duration),
     };
   });
   return map;
@@ -287,14 +354,12 @@ async function fetchVideoStats(videoIds) {
 function renderVideos(videos, stats, append) {
   const grid = document.getElementById("videos-grid");
   if (!append) grid.innerHTML = "";
-
-  videos.forEach((video) => {
-    const s = stats[video.videoId] || {};
-    const views = s.viewCount ? formatViewCount(s.viewCount) : "";
+  videos.forEach(video => {
+    const s       = stats[video.videoId] || {};
+    const views   = s.viewCount ? formatViewCount(s.viewCount) : "";
     const duration = s.duration || "";
-    const age = timeAgo(video.publishedAt);
-
-    const card = document.createElement("div");
+    const age     = timeAgo(video.publishedAt);
+    const card    = document.createElement("div");
     card.className = "video-card";
     card.innerHTML = `
       <div class="video-thumb-wrapper">
@@ -309,68 +374,27 @@ function renderVideos(videos, stats, append) {
     card.addEventListener("click", () => openPlayer(video.videoId));
     grid.appendChild(card);
   });
-
-  const loadMoreContainer = document.getElementById("load-more-container");
-  if (nextPageToken) {
-    loadMoreContainer.classList.remove("hidden");
-  } else {
-    loadMoreContainer.classList.add("hidden");
-  }
+  document.getElementById("load-more-container").classList.toggle("hidden", !nextPageToken);
 }
 
 function setSort(sort) {
   if (sort === currentSort) return;
-  currentSort = sort;
+  currentSort   = sort;
   nextPageToken = null;
   document.getElementById("sort-new").classList.toggle("active", sort === "new");
   document.getElementById("sort-popular").classList.toggle("active", sort === "popular");
   loadVideos(false);
 }
 
-// --- Video player ---
+// ── Player ──
 function openPlayer(videoId) {
-  stopTimer();
   const iframe = document.getElementById("youtube-player");
   iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
   history.pushState({ screen: "player" }, "");
   showScreen("player");
-  startTimer();
 }
 
-function startTimer() {
-  let secondsLeft = CONFIG.WATCH_TIMER_SECONDS;
-  updateTimerDisplay(secondsLeft);
-
-  timerInterval = setInterval(() => {
-    secondsLeft--;
-    updateTimerDisplay(secondsLeft);
-    if (secondsLeft <= 0) {
-      stopTimer();
-      timeIsUp();
-    }
-  }, 1000);
-}
-
-function stopTimer() {
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-}
-
-function updateTimerDisplay(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  document.getElementById("timer-display").textContent =
-    `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
-
-function timeIsUp() {
-  document.getElementById("youtube-player").src = "";
-  showScreen("timesup");
-}
-
-// --- Utilities ---
+// ── Utilities ──
 function parseDuration(iso) {
   if (!iso) return "";
   const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -378,14 +402,14 @@ function parseDuration(iso) {
   const h = parseInt(match[1] || 0);
   const m = parseInt(match[2] || 0);
   const s = parseInt(match[3] || 0);
-  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  return `${m}:${String(s).padStart(2, "0")}`;
+  if (h > 0) return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  return `${m}:${String(s).padStart(2,"0")}`;
 }
 
 function formatViewCount(count) {
   const n = parseInt(count);
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M views`;
-  if (n >= 1000) return `${Math.round(n / 1000)}K views`;
+  if (n >= 1000)    return `${Math.round(n / 1000)}K views`;
   return `${n} views`;
 }
 
@@ -394,7 +418,7 @@ function timeAgo(dateString) {
   const seconds = Math.floor((Date.now() - new Date(dateString)) / 1000);
   const intervals = [
     [31536000, "year"], [2592000, "month"], [604800, "week"],
-    [86400, "day"], [3600, "hour"], [60, "minute"],
+    [86400, "day"],     [3600, "hour"],     [60, "minute"],
   ];
   for (const [secs, label] of intervals) {
     const count = Math.floor(seconds / secs);
@@ -403,29 +427,43 @@ function timeAgo(dateString) {
   return "just now";
 }
 
-// --- Event listeners ---
+// ── Event listeners ──
 document.getElementById("login-button").addEventListener("click", startLogin);
 document.getElementById("retry-button").addEventListener("click", () => showScreen("login"));
-document.getElementById("back-to-channels").addEventListener("click", () => showScreen("channels"));
-document.getElementById("sort-new").addEventListener("click", () => setSort("new"));
-document.getElementById("sort-popular").addEventListener("click", () => setSort("popular"));
-document.getElementById("load-more-button").addEventListener("click", () => loadVideos(true));
-document.getElementById("back-to-channel").addEventListener("click", () => {
-  stopTimer();
-  document.getElementById("youtube-player").src = "";
+
+document.getElementById("back-to-channels").addEventListener("click", () => {
   history.back();
+  showScreen("channels");
 });
 
-// Browser back button — navigate within the app instead of leaving it
-window.addEventListener("popstate", (event) => {
+document.getElementById("sort-new").addEventListener("click",     () => setSort("new"));
+document.getElementById("sort-popular").addEventListener("click", () => setSort("popular"));
+document.getElementById("load-more-button").addEventListener("click", () => loadVideos(true));
+
+document.getElementById("back-to-channel").addEventListener("click", () => {
+  document.getElementById("youtube-player").src = "";
+  history.back();
+  showScreen("channelDetail"); // Show immediately, don't wait for popstate
+});
+
+// Parent reset — both header lock button and player lock button
+document.getElementById("parent-reset-btn").addEventListener("click",  openResetModal);
+document.getElementById("player-reset-btn").addEventListener("click",  openResetModal);
+document.getElementById("parent-reset-cancel").addEventListener("click",  closeResetModal);
+document.getElementById("parent-reset-confirm").addEventListener("click", confirmReset);
+
+// Allow pressing Enter in the code input
+document.getElementById("parent-reset-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") confirmReset();
+});
+
+// Browser back button
+window.addEventListener("popstate", event => {
   const state = event.state;
   if (!state) return;
-  stopTimer();
   document.getElementById("youtube-player").src = "";
-  if (state.screen === "channels") {
-    showScreen("channels");
-  } else if (state.screen === "channelDetail") {
-    showScreen("channelDetail");
-  }
+  if (state.screen === "channels")      showScreen("channels");
+  if (state.screen === "channelDetail") showScreen("channelDetail");
 });
+
 initGoogleAuth();
