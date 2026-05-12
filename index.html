@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CalmTube">
+  <title>CalmTube</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="config.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>CalmTube</h1>
+  </header>
+
+  <main>
+    <section id="login-screen" class="screen">
+      <div class="login-card">
+        <h2>Welcome</h2>
+        <p>Sign in to see your channels.</p>
+        <button id="login-button" class="big-button">Sign in with Google</button>
+      </div>
+    </section>
+
+    <section id="loading-screen" class="screen hidden">
+      <p class="loading">Loading your channels...</p>
+    </section>
+
+    <section id="channels-screen" class="screen hidden">
+      <div id="channels-grid" class="channels-grid"></div>
+    </section>
+
+    <section id="error-screen" class="screen hidden">
+      <p id="error-message" class="error"></p>
+      <button id="retry-button" class="big-button">Try again</button>
+    </section>
+  </main>
+</body>
+</html>
