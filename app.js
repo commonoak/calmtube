@@ -167,7 +167,10 @@ function resetTimer() {
 }
 
 // ── Parent reset modal ──
-function openResetModal() {
+let resetModalOrigin = "header"; // "header" | "timesup"
+
+function openResetModal(origin = "header") {
+  resetModalOrigin = origin;
   document.getElementById("parent-reset-input").value = "";
   document.getElementById("parent-reset-error").classList.add("hidden");
   document.getElementById("parent-reset-modal").classList.remove("hidden");
@@ -183,6 +186,10 @@ function confirmReset() {
   if (entered === CONFIG.PARENT_CODE) {
     closeResetModal();
     resetTimer();
+    if (resetModalOrigin === "timesup") {
+      history.replaceState({ screen: "channels" }, "");
+      showScreen("channels");
+    }
   } else {
     document.getElementById("parent-reset-error").classList.remove("hidden");
     document.getElementById("parent-reset-input").value = "";
@@ -446,9 +453,10 @@ document.getElementById("back-to-channel").addEventListener("click", () => {
   showScreen("channelDetail"); // Show immediately, don't wait for popstate
 });
 
-// Parent reset — both header lock button and player lock button
-document.getElementById("parent-reset-btn").addEventListener("click",  openResetModal);
-document.getElementById("player-reset-btn").addEventListener("click",  openResetModal);
+// Parent reset — header lock, player lock, and tap anywhere on time's up screen
+document.getElementById("parent-reset-btn").addEventListener("click", () => openResetModal("header"));
+document.getElementById("player-reset-btn").addEventListener("click", () => openResetModal("header"));
+document.getElementById("timesup-screen").addEventListener("click",   () => openResetModal("timesup"));
 document.getElementById("parent-reset-cancel").addEventListener("click",  closeResetModal);
 document.getElementById("parent-reset-confirm").addEventListener("click", confirmReset);
 
