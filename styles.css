@@ -271,7 +271,8 @@ main {
 
 #channel-detail-screen {
   align-items: stretch;
-  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .detail-header {
@@ -284,6 +285,9 @@ main {
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   flex-wrap: wrap;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .detail-header h2 {
@@ -327,9 +331,6 @@ main {
   gap: 18px;
   padding: 20px;
   width: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  flex: 1;
 }
 
 .video-card {
