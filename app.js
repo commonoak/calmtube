@@ -126,6 +126,8 @@ async function loadSubscriptions() {
   }
 }
 
+
+
 function renderChannels(subscriptions) {
   const grid = document.getElementById("channels-grid");
   grid.innerHTML = "";
@@ -148,6 +150,7 @@ function renderChannels(subscriptions) {
       grid.appendChild(card);
     });
   }
+  history.replaceState({ screen: "channels" }, "");
   showScreen("channels");
 }
 
@@ -165,6 +168,7 @@ async function openChannel(channelId, title) {
   document.getElementById("videos-grid").innerHTML = "";
   document.getElementById("load-more-container").classList.add("hidden");
 
+  history.pushState({ screen: "channelDetail", channelId, channelTitle: title }, "");
   showScreen("channelDetail");
   await loadVideos(false);
 }
@@ -328,7 +332,7 @@ function openPlayer(videoId) {
   stopTimer();
   const iframe = document.getElementById("youtube-player");
   iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
-  document.getElementById("timesup-overlay").classList.add("hidden");
+  history.pushState({ screen: "player" }, "");
   showScreen("player");
   startTimer();
 }
@@ -409,6 +413,19 @@ document.getElementById("load-more-button").addEventListener("click", () => load
 document.getElementById("back-to-channel").addEventListener("click", () => {
   stopTimer();
   document.getElementById("youtube-player").src = "";
-  showScreen("channelDetail");
+  history.back();
+});
+
+// Browser back button — navigate within the app instead of leaving it
+window.addEventListener("popstate", (event) => {
+  const state = event.state;
+  if (!state) return;
+  stopTimer();
+  document.getElementById("youtube-player").src = "";
+  if (state.screen === "channels") {
+    showScreen("channels");
+  } else if (state.screen === "channelDetail") {
+    showScreen("channelDetail");
+  }
 });
 initGoogleAuth();
