@@ -77,7 +77,7 @@ function initGoogleAuth() {
     callback: handleAuthResponse,
   });
 
-  // Use stored token if still valid
+  // Use stored token if still valid, otherwise show login screen
   const stored = getStoredToken();
   if (stored) {
     accessToken = stored;
@@ -85,9 +85,7 @@ function initGoogleAuth() {
     return;
   }
 
-  // Try silent auth — no popup if user already authorized before
-  showScreen("loading");
-  tokenClient.requestAccessToken({ prompt: "" });
+  showScreen("login");
 }
 
 function startLogin() {
