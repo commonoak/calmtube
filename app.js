@@ -46,6 +46,7 @@ let currentSort        = "new";
 let uploadsPlaylistId  = null;
 let nextPageToken      = null;
 let timerInterval      = null;
+let selectedMinutes    = 30;
 
 // ── Screen management ──
 const screens = {
@@ -157,13 +158,15 @@ function timeIsUp() {
   showScreen("timesup");
 }
 
-function resetTimer() {
+function resetTimer(durationSeconds) {
   if (timerInterval) {
     clearInterval(timerInterval);
     timerInterval = null;
   }
   clearTimerStorage();
-  startGlobalTimer();
+  saveTimerStart(durationSeconds);
+  runTimer(durationSeconds);
+  document.getElementById("global-timer").classList.remove("hidden");
 }
 
 // ── Parent reset modal ──
@@ -171,6 +174,10 @@ let resetModalOrigin = "header"; // "header" | "timesup"
 
 function openResetModal(origin = "header") {
   resetModalOrigin = origin;
+  selectedMinutes = Math.round(CONFIG.WATCH_TIMER_SECONDS / 60);
+  document.querySelectorAll(".preset-btn").forEach(btn => {
+    btn.classList.toggle("active", parseInt(btn.dataset.minutes) === selectedMinutes);
+  });
   document.getElementById("parent-reset-input").value = "";
   document.getElementById("parent-reset-error").classList.add("hidden");
   document.getElementById("parent-reset-modal").classList.remove("hidden");
@@ -185,7 +192,7 @@ function confirmReset() {
   const entered = document.getElementById("parent-reset-input").value;
   if (entered === CONFIG.PARENT_CODE) {
     closeResetModal();
-    resetTimer();
+    resetTimer(selectedMinutes * 60);
     if (resetModalOrigin === "timesup") {
       history.replaceState({ screen: "channels" }, "");
       showScreen("channels");
@@ -453,12 +460,21 @@ document.getElementById("back-to-channel").addEventListener("click", () => {
   showScreen("channelDetail"); // Show immediately, don't wait for popstate
 });
 
-// Parent reset — header lock, player lock, and tap anywhere on time's up screen
+// Parent reset — header lock, player lock, tap illustration on time's up
 document.getElementById("parent-reset-btn").addEventListener("click", () => openResetModal("header"));
 document.getElementById("player-reset-btn").addEventListener("click", () => openResetModal("header"));
-document.getElementById("timesup-screen").addEventListener("click",   () => openResetModal("timesup"));
+document.getElementById("timesup-illustration").addEventListener("click", () => openResetModal("timesup"));
 document.getElementById("parent-reset-cancel").addEventListener("click",  closeResetModal);
 document.getElementById("parent-reset-confirm").addEventListener("click", confirmReset);
+
+// Preset time buttons
+document.querySelectorAll(".preset-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    selectedMinutes = parseInt(btn.dataset.minutes);
+    document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  });
+});
 
 // Allow pressing Enter in the code input
 document.getElementById("parent-reset-input").addEventListener("keydown", e => {
