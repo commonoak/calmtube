@@ -316,7 +316,9 @@ async function openChannel(channelId, title) {
 
   history.pushState({ screen: "channelDetail", channelId, channelTitle: title }, "");
   showScreen("channelDetail");
-  document.getElementById("channel-detail-screen").scrollTop = 0;
+  const detailScreen = document.getElementById("channel-detail-screen");
+  detailScreen.scrollTop = 0;
+  requestAnimationFrame(() => { detailScreen.scrollTop = 0; });
   await loadVideos(false);
 }
 
