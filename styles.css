@@ -8,7 +8,7 @@
 
 html, body {
   height: 100%;
-  font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
   background: #F0FDF4;
   color: #1F2937;
 }
@@ -32,11 +32,29 @@ body {
   box-shadow: 0 2px 12px rgba(4, 120, 87, 0.3);
 }
 
-.app-title {
-  font-size: 26px;
-  font-weight: 800;
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-mark {
+  flex-shrink: 0;
+}
+
+.logo-wordmark {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+
+.logo-calm {
   color: white;
-  letter-spacing: 0.5px;
+}
+
+.logo-tube {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .global-timer {
