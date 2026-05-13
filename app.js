@@ -42,6 +42,49 @@ function clearTimerStorage() {
   localStorage.removeItem(TIMER_DURATION_KEY);
 }
 
+// ── Firebase ──
+firebase.initializeApp(CONFIG.FIREBASE);
+const db   = firebase.firestore();
+const auth = firebase.auth();
+
+async function firebaseSignIn(googleAccessToken) {
+  try {
+    const credential = firebase.auth.GoogleAuthProvider.credential(null, googleAccessToken);
+    await auth.signInWithCredential(credential);
+  } catch (err) {
+    console.warn("Firebase sign-in failed:", err);
+  }
+}
+
+async function loadChannelSelection() {
+  const user = auth.currentUser;
+  if (!user) return null;
+  try {
+    const doc = await db.collection("users").doc(user.uid).get();
+    if (doc.exists && doc.data().selectedChannelIds !== undefined) {
+      return doc.data().selectedChannelIds; // array or null (null = show all)
+    }
+    return undefined; // no record yet = first time
+  } catch (err) {
+    console.warn("Firestore load failed:", err);
+    return null;
+  }
+}
+
+async function saveChannelSelection(channelIds) {
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    await db.collection("users").doc(user.uid).set({
+      selectedChannelIds: channelIds,
+      email:     user.email,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  } catch (err) {
+    console.warn("Firestore save failed:", err);
+  }
+}
+
 // ── State ──
 let accessToken        = null;
 let tokenClient        = null;
@@ -77,7 +120,7 @@ function showError(message) {
 // ── Google Auth ──
 let silentRefreshTimeout = null;
 
-function handleAuthResponse(response) {
+async function handleAuthResponse(response) {
   if (silentRefreshTimeout) {
     clearTimeout(silentRefreshTimeout);
     silentRefreshTimeout = null;
@@ -89,6 +132,7 @@ function handleAuthResponse(response) {
   }
   accessToken = response.access_token;
   storeToken(response.access_token);
+  await firebaseSignIn(response.access_token);
   loadSubscriptions();
 }
 
@@ -249,6 +293,8 @@ function confirmReset() {
 }
 
 // ── Subscriptions ──
+let allSubscriptions = []; // cached for channel selector
+
 async function loadSubscriptions() {
   showScreen("loading");
   try {
@@ -268,7 +314,23 @@ async function loadSubscriptions() {
       pageToken = data.nextPageToken || "";
     } while (pageToken);
 
-    renderChannels(subscriptions);
+    allSubscriptions = subscriptions;
+
+    const selection = await loadChannelSelection();
+    if (selection === undefined) {
+      // First time — show all channels, Firestore record will be created on first settings save
+      renderChannels(subscriptions);
+    } else if (selection === null || selection.length === 0) {
+      // Explicitly set to show all
+      renderChannels(subscriptions);
+    } else {
+      // Filter to saved selection
+      const filtered = subscriptions.filter(sub =>
+        selection.includes(sub.snippet.resourceId.channelId)
+      );
+      renderChannels(filtered.length ? filtered : subscriptions);
+    }
+
     startGlobalTimer();
   } catch (err) {
     console.error(err);
