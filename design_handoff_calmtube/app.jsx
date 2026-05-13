@@ -16,7 +16,7 @@ function Frame({ children }) {
 }
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "greenHue": "#2D6A4F",
+  "greenHue": "#3A7D7B",
   "serif": "Lora (soft serif)"
 }/*EDITMODE-END*/;
 
@@ -48,7 +48,7 @@ function App() {
           <TweakColor
             label="Green"
             value={t.greenHue}
-            options={['#2D6A4F', '#059669', '#1E5F4E', '#5B7C3A', '#3A7D7B']}
+            options={['#3A7D7B', '#059669', '#1E5F4E', '#5B7C3A', '#3A7D7B']}
             onChange={v => setTweak('greenHue', v)}
           />
         </TweakSection>

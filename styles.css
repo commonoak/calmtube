@@ -1,7 +1,7 @@
 /* CalmTube — designed for kids on iPad */
 
 :root {
-  --ct-green: #2D6A4F;
+  --ct-green: #3A7D7B;
   --ct-green-ink:   color-mix(in oklch, var(--ct-green) 78%, #000 22%);
   --ct-green-soft:  color-mix(in oklch, var(--ct-green) 22%, #F4EFE4 78%);
   --ct-green-faint: color-mix(in oklch, var(--ct-green) 10%, #F4EFE4 90%);
