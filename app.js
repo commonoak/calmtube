@@ -523,11 +523,9 @@ async function openChannel(channelId, title) {
   document.getElementById("videos-grid").innerHTML = "";
   document.getElementById("load-more-container").classList.add("hidden");
 
+  document.getElementById("channel-detail-body").scrollTop = 0;
   history.pushState({ screen: "channelDetail", channelId, channelTitle: title }, "");
   showScreen("channelDetail");
-  const detailBody = document.getElementById("channel-detail-body");
-  detailBody.scrollTop = 0;
-  requestAnimationFrame(() => { detailBody.scrollTop = 0; });
   await loadVideos(false);
 }
 
