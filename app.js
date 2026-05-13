@@ -345,7 +345,6 @@ function logout() {
   clearStoredToken();
   clearTimerStorage();
   localStorage.removeItem(USER_ID_KEY);
-  localStorage.removeItem(CHANNEL_SELECTION_KEY);
   currentUserId = null;
   accessToken   = null;
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
@@ -526,9 +525,9 @@ async function openChannel(channelId, title) {
 
   history.pushState({ screen: "channelDetail", channelId, channelTitle: title }, "");
   showScreen("channelDetail");
-  const detailScreen = document.getElementById("channel-detail-screen");
-  detailScreen.scrollTop = 0;
-  requestAnimationFrame(() => { detailScreen.scrollTop = 0; });
+  const detailBody = document.getElementById("channel-detail-body");
+  detailBody.scrollTop = 0;
+  requestAnimationFrame(() => { detailBody.scrollTop = 0; });
   await loadVideos(false);
 }
 

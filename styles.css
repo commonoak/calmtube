@@ -750,8 +750,7 @@ main {
 
 #channel-detail-screen {
   align-items: stretch;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
 }
 
 .detail-header {
@@ -763,9 +762,12 @@ main {
   border-bottom: 1px solid rgba(0,0,0,0.06);
   box-shadow: 0 1px 8px rgba(0,0,0,0.05);
   flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+}
+
+.channel-detail-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .detail-header-top {
