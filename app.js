@@ -426,7 +426,17 @@ async function selectorSave() {
   const selectedIds = Array.from(selectorSelectedIds);
   const saveAll = selectedIds.length === allSubscriptions.length;
   await saveChannelSelection(saveAll ? null : selectedIds);
-  await loadSubscriptions(); // re-renders channel grid with new filter
+
+  // Render immediately from in-memory list — no need to re-fetch from YouTube.
+  if (saveAll) {
+    renderChannels(allSubscriptions);
+  } else {
+    const filtered = allSubscriptions.filter(sub =>
+      selectedIds.includes(sub.snippet.resourceId.channelId)
+    );
+    renderChannels(filtered.length ? filtered : allSubscriptions);
+  }
+  updateSettingsChannelCount();
 }
 
 // ── Subscriptions ──
