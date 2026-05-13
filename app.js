@@ -106,10 +106,16 @@ function showError(message) {
 let refreshTimeout = null;
 
 async function initAuth() {
-  if (new URLSearchParams(location.search).get("auth_error")) {
+  const params = new URLSearchParams(location.search);
+  if (params.get("auth_error")) {
     history.replaceState({}, "", "/");
     showScreen("login");
     return;
+  }
+  const isFreshLogin = params.get("fresh") === "1";
+  if (isFreshLogin) {
+    clearTimerStorage();
+    history.replaceState({}, "", "/");
   }
   showScreen("loading");
   try {

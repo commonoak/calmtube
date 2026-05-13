@@ -61,7 +61,7 @@ module.exports = async function handler(req, res) {
       "Set-Cookie",
       `ct_session=${encrypted}; HttpOnly; Secure; SameSite=Lax; Max-Age=31536000; Path=/`
     );
-    res.redirect("/");
+    res.redirect("/?fresh=1");
   } catch (err) {
     console.error("Auth handler error:", err);
     res.redirect("/?auth_error=1");
