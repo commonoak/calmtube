@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="CalmTube">
   <title>CalmTube</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="config.js" defer></script>
@@ -16,20 +16,22 @@
 </head>
 <body>
   <header id="app-header">
-    <div class="header-logo">
-      <svg class="logo-mark" width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="18" cy="18" r="15" stroke="white" stroke-width="2.5" fill="rgba(255,255,255,0.12)"/>
-        <path d="M10,15 Q13,19.5 16,15" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M20,15 Q23,19.5 26,15" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M11,23 Q18,28.5 25,23" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-      <div class="logo-wordmark">
-        <span class="logo-calm">Calm</span><span class="logo-tube">Tube</span>
-      </div>
+    <div class="wordmark">
+      <span class="wordmark-calm">Calm</span><span class="wordmark-tube">tube</span>
     </div>
     <div id="global-timer" class="global-timer hidden">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7.5" r="5.2" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M7 4.5V7.5L9 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <rect x="5.5" y="1.2" width="3" height="1.6" rx="0.6" fill="currentColor"/>
+      </svg>
       <span id="global-timer-display">30 min left</span>
-      <button id="parent-reset-btn" class="parent-reset-btn" title="Parent reset">🔒</button>
+      <button id="parent-reset-btn" class="parent-reset-btn" title="Parent reset">
+        <svg width="11" height="13" viewBox="0 0 11 13" fill="none" aria-hidden="true">
+          <rect x="1" y="5.5" width="9" height="7" rx="1.4" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M3 5.5V3.5a2.5 2.5 0 015 0v2" stroke="currentColor" stroke-width="1.3"/>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -67,16 +69,22 @@
   <main>
     <section id="login-screen" class="screen">
       <div class="hero">
-        <p class="hero-eyebrow">A focused viewer for YouTube</p>
-        <h1 class="hero-headline">Great content.<br>Zero distractions.</h1>
-        <p class="hero-sub">YouTube has incredible channels — but it's built like a slot machine. CalmTube shows only what you subscribe to. No autoplay, no algorithm, no rabbit holes.</p>
-        <ul class="hero-features">
-          <li>Your subscribed channels, and nothing else</li>
-          <li>No autoplay, suggestions, or recommendations</li>
-          <li>Built-in timer that nudges kids to go outside</li>
-        </ul>
+        <div class="hero-top-bar">
+          <div class="wordmark">
+            <span class="wordmark-calm">Calm</span><span class="wordmark-tube">tube</span>
+          </div>
+          <span class="mono-label">V1.0</span>
+        </div>
+        <p class="hero-overline">A focused viewer for YouTube</p>
+        <h1 class="hero-headline">A calmer way to <em>watch.</em></h1>
+        <p class="hero-sub">CalmTube shows kids only the channels you subscribe to. No algorithm. No autoplay. No rabbit holes.</p>
+        <ol class="hero-features">
+          <li><span class="feature-num">01</span><span>Subscribed channels, nothing else</span></li>
+          <li><span class="feature-num">02</span><span>No autoplay or recommendations</span></li>
+          <li><span class="feature-num">03</span><span>A timer that nudges kids outside</span></li>
+        </ol>
         <div class="hero-cta">
-          <button id="login-button" class="big-button">Sign in with Google</button>
+          <button id="login-button" class="cta-primary">Continue with Google</button>
           <p class="cta-note">Uses your existing YouTube subscriptions</p>
         </div>
       </div>

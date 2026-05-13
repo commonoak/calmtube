@@ -1,5 +1,27 @@
 /* CalmTube — designed for kids on iPad */
 
+:root {
+  --ct-green: #2D6A4F;
+  --ct-green-ink:   color-mix(in oklch, var(--ct-green) 78%, #000 22%);
+  --ct-green-soft:  color-mix(in oklch, var(--ct-green) 22%, #F4EFE4 78%);
+  --ct-green-faint: color-mix(in oklch, var(--ct-green) 10%, #F4EFE4 90%);
+  --ct-green-10:    color-mix(in oklch, var(--ct-green) 12%, transparent);
+  --ct-green-20:    color-mix(in oklch, var(--ct-green) 22%, transparent);
+  --ct-serif: 'Lora', Georgia, serif;
+  --ct-sans:  'DM Sans', -apple-system, system-ui, sans-serif;
+  --ct-mono:  'JetBrains Mono', ui-monospace, monospace;
+  --ct-bg:       #F4EFE4;
+  --ct-bg-deep:  #EBE4D2;
+  --ct-cream:    #FBF7EC;
+  --ct-ink:      #15140F;
+  --ct-ink-soft: #3C3A33;
+  --ct-ink-muted:#6B665A;
+  --ct-ink-faint:#9A9485;
+  --ct-hairline: #D6CFBE;
+  --ct-shadow:   0 1px 2px rgba(20,18,12,0.04), 0 8px 24px -10px rgba(20,18,12,0.08);
+  --ct-shadow-lg:0 2px 4px rgba(20,18,12,0.05), 0 18px 40px -16px rgba(20,18,12,0.14);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -8,15 +30,51 @@
 
 html, body {
   height: 100%;
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #F0FDF4;
-  color: #1F2937;
+  font-family: var(--ct-sans);
+  background: var(--ct-bg);
+  color: var(--ct-ink);
 }
 
 body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+/* ── Wordmark ── */
+
+.wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-size: 22px;
+}
+
+.wordmark-calm {
+  font-family: var(--ct-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ct-ink);
+}
+
+.wordmark-tube {
+  font-family: var(--ct-sans);
+  font-weight: 600;
+  color: var(--ct-green);
+  margin-left: 2px;
+}
+
+/* ── Mono label ── */
+
+.mono-label {
+  font-family: var(--ct-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ct-ink-muted);
 }
 
 /* ── Header ── */
@@ -26,78 +84,61 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  height: 64px;
-  background: rgba(4, 120, 87, 0.82);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  height: 60px;
+  background: var(--ct-bg);
+  border-bottom: 1px solid var(--ct-hairline);
   flex-shrink: 0;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.08), 0 2px 16px rgba(4, 120, 87, 0.2);
   position: sticky;
   top: 0;
   z-index: 30;
 }
 
-.header-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo-mark {
-  flex-shrink: 0;
-}
-
-.logo-wordmark {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  line-height: 1;
-}
-
-.logo-calm {
-  color: white;
-}
-
-.logo-tube {
-  color: rgba(255, 255, 255, 0.6);
+/* Hide app header on login screen — wordmark is inline in the hero */
+body:has(#login-screen:not(.hidden)) #app-header {
+  display: none;
 }
 
 .global-timer {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 24px;
-  padding: 6px 14px 6px 16px;
+  gap: 8px;
+  height: 44px;
+  padding: 0 8px 0 16px;
+  border-radius: 999px;
+  background: var(--ct-green-10);
+  border: 1px solid var(--ct-green-20);
+  color: var(--ct-green);
+  font-family: var(--ct-sans);
+  font-weight: 600;
+  font-size: 14px;
 }
 
 #global-timer-display {
-  font-size: 16px;
-  font-weight: 700;
-  color: white;
-  letter-spacing: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: inherit;
 }
 
 #global-timer-display.timer-warning {
-  color: #FCA5A5;
+  color: #B45309;
 }
 
 .parent-reset-btn {
-  background: rgba(255,255,255,0.2);
+  background: var(--ct-green-20);
   border: none;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  font-size: 16px;
+  width: 28px;
+  height: 28px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  color: var(--ct-green);
 }
 
 .parent-reset-btn:active {
-  background: rgba(255,255,255,0.35);
+  background: var(--ct-green-soft);
 }
 
 /* ── Screens ── */
@@ -126,80 +167,119 @@ main {
 /* ── Login / Hero ── */
 
 #login-screen {
-  background: white;
+  background: var(--ct-bg);
   justify-content: flex-start;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .hero {
   width: 100%;
-  max-width: 460px;
-  padding: 48px 28px 36px;
+  max-width: 480px;
+  padding: 52px 28px 52px;
   display: flex;
   flex-direction: column;
 }
 
-.hero-eyebrow {
-  font-size: 12px;
-  font-weight: 700;
+.hero-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 52px;
+}
+
+.hero-overline {
+  font-family: var(--ct-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #059669;
-  margin-bottom: 14px;
+  color: var(--ct-green);
+  margin-bottom: 16px;
 }
 
 .hero-headline {
-  font-size: 36px;
-  font-weight: 800;
-  line-height: 1.1;
-  color: #111827;
-  margin-bottom: 14px;
+  font-family: var(--ct-serif);
+  font-size: 56px;
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  color: var(--ct-ink);
+  margin-bottom: 18px;
+}
+
+.hero-headline em {
+  font-style: italic;
 }
 
 .hero-sub {
   font-size: 15px;
   line-height: 1.6;
-  color: #4B5563;
-  margin-bottom: 22px;
+  color: var(--ct-ink-soft);
+  margin-bottom: 28px;
 }
 
 .hero-features {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 28px;
+  border-top: 1px solid var(--ct-hairline);
+  margin-bottom: 36px;
 }
 
 .hero-features li {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ct-hairline);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ct-ink-soft);
 }
 
-.hero-features li::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #059669;
+.feature-num {
+  font-family: var(--ct-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--ct-green);
   flex-shrink: 0;
+  width: 24px;
 }
 
 .hero-cta {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
+}
+
+.cta-primary {
+  height: 60px;
+  padding: 0 32px;
+  background: var(--ct-ink);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-family: var(--ct-sans);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.cta-primary:active {
+  opacity: 0.85;
 }
 
 .cta-note {
-  font-size: 13px;
-  color: #9CA3AF;
+  font-family: var(--ct-mono);
+  font-size: 11px;
   font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ct-ink-faint);
 }
 
 /* ── PIN input ── */
@@ -282,24 +362,22 @@ main {
 /* ── Buttons ── */
 
 .big-button {
-  background: #059669;
+  background: var(--ct-green);
   color: white;
   border: none;
   padding: 16px 32px;
-  font-size: 18px;
-  font-weight: 700;
-  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  font-family: var(--ct-sans);
   border-radius: 14px;
   cursor: pointer;
-  min-height: 58px;
+  min-height: 56px;
   min-width: 220px;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
-  transition: transform 0.1s;
+  transition: opacity 0.15s;
 }
 
 .big-button:active {
-  background: #047857;
-  transform: scale(0.97);
+  opacity: 0.85;
 }
 
 .back-button {
