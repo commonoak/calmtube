@@ -98,13 +98,14 @@ let selectedMinutes    = 30;
 
 // ── Screen management ──
 const screens = {
-  login:         document.getElementById("login-screen"),
-  loading:       document.getElementById("loading-screen"),
-  channels:      document.getElementById("channels-screen"),
-  channelDetail: document.getElementById("channel-detail-screen"),
-  player:        document.getElementById("player-screen"),
-  timesup:       document.getElementById("timesup-screen"),
-  error:         document.getElementById("error-screen"),
+  login:           document.getElementById("login-screen"),
+  loading:         document.getElementById("loading-screen"),
+  channels:        document.getElementById("channels-screen"),
+  channelDetail:   document.getElementById("channel-detail-screen"),
+  player:          document.getElementById("player-screen"),
+  timesup:         document.getElementById("timesup-screen"),
+  channelSelector: document.getElementById("channel-selector-screen"),
+  error:           document.getElementById("error-screen"),
 };
 
 function showScreen(name) {
@@ -183,20 +184,18 @@ function startGlobalTimer() {
   const remaining = getRemainingSeconds();
 
   if (remaining === null) {
-    // Fresh session — start a new timer
     saveTimerStart(CONFIG.WATCH_TIMER_SECONDS);
     runTimer(CONFIG.WATCH_TIMER_SECONDS);
   } else if (remaining === 0) {
-    // Already expired (e.g. they refreshed after time was up)
     clearTimerStorage();
     timeIsUp();
     return;
   } else {
-    // Resume from where we left off
     runTimer(remaining);
   }
 
   document.getElementById("global-timer").classList.remove("hidden");
+  document.getElementById("settings-btn").classList.remove("hidden");
 }
 
 function runTimer(startSeconds) {
@@ -261,6 +260,16 @@ function updatePinDisplay() {
 
 function openResetModal(origin = "header") {
   resetModalOrigin = origin;
+  const isSettings = origin === "settings";
+
+  // Show/hide timer presets depending on context
+  document.querySelector(".preset-label").style.display  = isSettings ? "none" : "";
+  document.querySelector(".time-presets").style.display  = isSettings ? "none" : "";
+
+  // Update modal title
+  document.querySelector("#parent-reset-modal h3").textContent =
+    isSettings ? "Parent Settings" : "Parent Reset";
+
   selectedMinutes = Math.round(CONFIG.WATCH_TIMER_SECONDS / 60);
   document.querySelectorAll(".preset-btn").forEach(btn => {
     btn.classList.toggle("active", parseInt(btn.dataset.minutes) === selectedMinutes);
@@ -280,16 +289,95 @@ function confirmReset() {
   const entered = document.getElementById("parent-reset-input").value;
   if (entered === CONFIG.PARENT_CODE) {
     closeResetModal();
-    resetTimer(selectedMinutes * 60);
-    if (resetModalOrigin === "timesup") {
-      history.replaceState({ screen: "channels" }, "");
-      showScreen("channels");
+    if (resetModalOrigin === "settings") {
+      openChannelSelector();
+    } else {
+      resetTimer(selectedMinutes * 60);
+      if (resetModalOrigin === "timesup") {
+        history.replaceState({ screen: "channels" }, "");
+        showScreen("channels");
+      }
     }
   } else {
     document.getElementById("parent-reset-error").classList.remove("hidden");
     document.getElementById("parent-reset-input").value = "";
     document.getElementById("parent-reset-input").focus();
   }
+}
+
+// ── Channel selector ──
+let selectorSelectedIds = new Set();
+
+function openChannelSelector() {
+  // Pre-check whatever is currently showing
+  const currentIds = Array.from(document.querySelectorAll(".channel-card"))
+    .map(card => card.dataset.channelId)
+    .filter(Boolean);
+
+  // If nothing specific is saved, check all subscriptions
+  const baseIds = currentIds.length
+    ? currentIds
+    : allSubscriptions.map(s => s.snippet.resourceId.channelId);
+
+  selectorSelectedIds = new Set(baseIds);
+  document.getElementById("selector-search").value = "";
+  renderSelectorList();
+  updateSelectorSaveBtn();
+  showScreen("channelSelector");
+}
+
+function renderSelectorList(query = "") {
+  const list = document.getElementById("selector-list");
+  list.innerHTML = "";
+  const q = query.toLowerCase();
+  const filtered = allSubscriptions.filter(sub =>
+    sub.snippet.title.toLowerCase().includes(q)
+  );
+  filtered.forEach(sub => {
+    const id      = sub.snippet.resourceId.channelId;
+    const title   = sub.snippet.title;
+    const thumb   = sub.snippet.thumbnails.default?.url || sub.snippet.thumbnails.medium?.url;
+    const checked = selectorSelectedIds.has(id);
+    const row = document.createElement("div");
+    row.className = "selector-row";
+    row.innerHTML = `
+      <img class="selector-avatar" src="${thumb}" alt="${title}">
+      <span class="selector-channel-name">${title}</span>
+      <div class="selector-checkbox ${checked ? "checked" : ""}">
+        ${checked ? `<svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1 5l3.5 3.5L12 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ""}
+      </div>
+    `;
+    row.addEventListener("click", () => {
+      if (selectorSelectedIds.has(id)) {
+        selectorSelectedIds.delete(id);
+      } else {
+        selectorSelectedIds.add(id);
+      }
+      renderSelectorList(document.getElementById("selector-search").value);
+      updateSelectorSaveBtn();
+    });
+    list.appendChild(row);
+  });
+
+  // Update select-all button label
+  const allVisible = filtered.every(s => selectorSelectedIds.has(s.snippet.resourceId.channelId));
+  document.getElementById("selector-select-all").textContent = allVisible ? "Deselect all" : "Select all";
+}
+
+function updateSelectorSaveBtn() {
+  const count = selectorSelectedIds.size;
+  const total = allSubscriptions.length;
+  const btn = document.getElementById("selector-save");
+  btn.textContent = count === total
+    ? "Show all channels"
+    : `Save ${count} channel${count !== 1 ? "s" : ""}`;
+}
+
+async function selectorSave() {
+  const selectedIds = Array.from(selectorSelectedIds);
+  const saveAll = selectedIds.length === allSubscriptions.length;
+  await saveChannelSelection(saveAll ? null : selectedIds);
+  await loadSubscriptions();
 }
 
 // ── Subscriptions ──
@@ -350,6 +438,7 @@ function renderChannels(subscriptions) {
       const thumb     = sub.snippet.thumbnails.medium.url;
       const card = document.createElement("div");
       card.className = "channel-card";
+      card.dataset.channelId = channelId;
       card.innerHTML = `
         <img class="channel-thumb" src="${thumb}" alt="${title}">
         <div class="channel-name">${title}</div>
@@ -553,6 +642,28 @@ function timeAgo(dateString) {
 // ── Event listeners ──
 document.getElementById("login-button").addEventListener("click", startLogin);
 document.getElementById("retry-button").addEventListener("click", () => showScreen("login"));
+
+// Gear icon — PIN-gated, then opens channel selector
+document.getElementById("settings-btn").addEventListener("click", () => openResetModal("settings"));
+
+// Channel selector
+document.getElementById("selector-close").addEventListener("click", () => showScreen("channels"));
+document.getElementById("selector-search").addEventListener("input", e => {
+  renderSelectorList(e.target.value);
+  updateSelectorSaveBtn();
+});
+document.getElementById("selector-select-all").addEventListener("click", () => {
+  const q = document.getElementById("selector-search").value.toLowerCase();
+  const visible = allSubscriptions.filter(s => s.snippet.title.toLowerCase().includes(q));
+  const allChecked = visible.every(s => selectorSelectedIds.has(s.snippet.resourceId.channelId));
+  visible.forEach(s => {
+    const id = s.snippet.resourceId.channelId;
+    allChecked ? selectorSelectedIds.delete(id) : selectorSelectedIds.add(id);
+  });
+  renderSelectorList(document.getElementById("selector-search").value);
+  updateSelectorSaveBtn();
+});
+document.getElementById("selector-save").addEventListener("click", selectorSave);
 
 document.getElementById("back-to-channels").addEventListener("click", () => {
   history.back();
