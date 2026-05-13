@@ -111,6 +111,12 @@ body:has(#login-screen:not(.hidden)) #app-header {
   font-family: var(--ct-sans);
   font-weight: 600;
   font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.global-timer:active {
+  background: var(--ct-green-soft);
 }
 
 #global-timer-display {
@@ -307,6 +313,73 @@ main {
 
 .icon-btn:active {
   background: var(--ct-bg-deep);
+}
+
+/* ── Settings screen ── */
+
+#settings-screen {
+  align-items: stretch;
+  overflow-y: auto;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--ct-hairline);
+  flex-shrink: 0;
+}
+
+.settings-body {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 18px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 1px solid var(--ct-hairline);
+  text-align: left;
+  color: var(--ct-ink);
+}
+
+.settings-row:active {
+  opacity: 0.6;
+}
+
+.settings-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.settings-row-label {
+  font-family: var(--ct-sans);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ct-ink);
+}
+
+.settings-row-meta {
+  font-family: var(--ct-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ct-ink-muted);
+}
+
+.settings-row-danger .settings-row-label {
+  color: #B91C1C;
 }
 
 /* ── Channel selector screen ── */

@@ -44,40 +44,45 @@ function clearTimerStorage() {
 
 // ── Firebase ──
 firebase.initializeApp(CONFIG.FIREBASE);
-const db   = firebase.firestore();
-const auth = firebase.auth();
+const db = firebase.firestore();
 
-async function firebaseSignIn(googleAccessToken) {
+// We identify users by their Google account ID (sub), fetched from userinfo API.
+// Stored in localStorage so it survives page reloads within the same session.
+const USER_ID_KEY = "calmtube_user_id";
+let currentUserId = localStorage.getItem(USER_ID_KEY) || null;
+
+async function fetchAndStoreUserId() {
   try {
-    const credential = firebase.auth.GoogleAuthProvider.credential(null, googleAccessToken);
-    await auth.signInWithCredential(credential);
+    const res  = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const info = await res.json();
+    currentUserId = info.sub;
+    localStorage.setItem(USER_ID_KEY, info.sub);
   } catch (err) {
-    console.warn("Firebase sign-in failed:", err);
+    console.warn("Could not fetch user info:", err);
   }
 }
 
 async function loadChannelSelection() {
-  const user = auth.currentUser;
-  if (!user) return null;
+  if (!currentUserId) return undefined;
   try {
-    const doc = await db.collection("users").doc(user.uid).get();
+    const doc = await db.collection("users").doc(currentUserId).get();
     if (doc.exists && doc.data().selectedChannelIds !== undefined) {
-      return doc.data().selectedChannelIds; // array or null (null = show all)
+      return doc.data().selectedChannelIds;
     }
-    return undefined; // no record yet = first time
+    return undefined; // no record yet
   } catch (err) {
     console.warn("Firestore load failed:", err);
-    return null;
+    return undefined;
   }
 }
 
 async function saveChannelSelection(channelIds) {
-  const user = auth.currentUser;
-  if (!user) return;
+  if (!currentUserId) return;
   try {
-    await db.collection("users").doc(user.uid).set({
+    await db.collection("users").doc(currentUserId).set({
       selectedChannelIds: channelIds,
-      email:     user.email,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
   } catch (err) {
@@ -105,6 +110,7 @@ const screens = {
   player:          document.getElementById("player-screen"),
   timesup:         document.getElementById("timesup-screen"),
   channelSelector: document.getElementById("channel-selector-screen"),
+  settings:        document.getElementById("settings-screen"),
   error:           document.getElementById("error-screen"),
 };
 
@@ -131,9 +137,11 @@ async function handleAuthResponse(response) {
     showScreen("login");
     return;
   }
+  // Clear any stale timer so a fresh login always starts at full time
+  clearTimerStorage();
   accessToken = response.access_token;
   storeToken(response.access_token);
-  await firebaseSignIn(response.access_token);
+  await fetchAndStoreUserId();
   loadSubscriptions();
 }
 
@@ -290,7 +298,7 @@ function confirmReset() {
   if (entered === CONFIG.PARENT_CODE) {
     closeResetModal();
     if (resetModalOrigin === "settings") {
-      openChannelSelector();
+      openSettings();
     } else {
       resetTimer(selectedMinutes * 60);
       if (resetModalOrigin === "timesup") {
@@ -303,6 +311,32 @@ function confirmReset() {
     document.getElementById("parent-reset-input").value = "";
     document.getElementById("parent-reset-input").focus();
   }
+}
+
+// ── Settings ──
+function openSettings() {
+  updateSettingsChannelCount();
+  showScreen("settings");
+}
+
+function updateSettingsChannelCount() {
+  const el = document.getElementById("settings-channel-count");
+  if (!el) return;
+  const showing = document.querySelectorAll(".channel-card").length;
+  const total   = allSubscriptions.length;
+  el.textContent = showing === total ? "All channels" : `${showing} of ${total}`;
+}
+
+function logout() {
+  clearStoredToken();
+  clearTimerStorage();
+  localStorage.removeItem(USER_ID_KEY);
+  currentUserId = null;
+  accessToken   = null;
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  document.getElementById("global-timer").classList.add("hidden");
+  document.getElementById("settings-btn").classList.add("hidden");
+  showScreen("login");
 }
 
 // ── Channel selector ──
@@ -377,7 +411,7 @@ async function selectorSave() {
   const selectedIds = Array.from(selectorSelectedIds);
   const saveAll = selectedIds.length === allSubscriptions.length;
   await saveChannelSelection(saveAll ? null : selectedIds);
-  await loadSubscriptions();
+  await loadSubscriptions(); // re-renders channel grid with new filter
 }
 
 // ── Subscriptions ──
@@ -643,8 +677,16 @@ function timeAgo(dateString) {
 document.getElementById("login-button").addEventListener("click", startLogin);
 document.getElementById("retry-button").addEventListener("click", () => showScreen("login"));
 
-// Gear icon — PIN-gated, then opens channel selector
+// Gear icon — PIN-gated, then opens settings
 document.getElementById("settings-btn").addEventListener("click", () => openResetModal("settings"));
+
+// Settings screen
+document.getElementById("settings-back").addEventListener("click", () => showScreen("channels"));
+document.getElementById("settings-edit-channels").addEventListener("click", () => {
+  showScreen("channelSelector");
+  openChannelSelector();
+});
+document.getElementById("settings-logout").addEventListener("click", logout);
 
 // Channel selector
 document.getElementById("selector-close").addEventListener("click", () => showScreen("channels"));
@@ -680,9 +722,10 @@ document.getElementById("back-to-channel").addEventListener("click", () => {
   showScreen("channelDetail"); // Show immediately, don't wait for popstate
 });
 
-// Parent reset — header lock, player lock, tap illustration on time's up
-document.getElementById("parent-reset-btn").addEventListener("click", () => openResetModal("header"));
-document.getElementById("player-reset-btn").addEventListener("click", () => openResetModal("header"));
+// Timer pill (whole pill) + player timer + timesup illustration
+document.getElementById("global-timer").addEventListener("click", () => openResetModal("header"));
+document.getElementById("player-reset-btn").addEventListener("click", (e) => { e.stopPropagation(); openResetModal("header"); });
+document.getElementById("timer-display").addEventListener("click", () => openResetModal("header"));
 document.getElementById("timesup-illustration").addEventListener("click", () => openResetModal("timesup"));
 document.getElementById("parent-reset-cancel").addEventListener("click",  closeResetModal);
 document.getElementById("parent-reset-confirm").addEventListener("click", confirmReset);
