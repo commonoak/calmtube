@@ -1,31 +1,9 @@
 // CalmTube — main app logic
 
 // ── Storage keys ──
-const TOKEN_KEY              = "calmtube_token";
-const TOKEN_EXPIRY_KEY       = "calmtube_token_expiry";
-const HAS_CONSENT_KEY        = "calmtube_has_consent";
 const TIMER_START_KEY        = "calmtube_timer_start";
 const TIMER_DURATION_KEY     = "calmtube_timer_duration";
 const CHANNEL_SELECTION_KEY  = "calmtube_channel_selection";
-
-// ── Token helpers ──
-function storeToken(token) {
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(TOKEN_EXPIRY_KEY, Date.now() + 55 * 60 * 1000);
-  localStorage.setItem(HAS_CONSENT_KEY, "1");
-}
-function getStoredToken() {
-  const token  = localStorage.getItem(TOKEN_KEY);
-  const expiry = parseInt(localStorage.getItem(TOKEN_EXPIRY_KEY) || "0");
-  return token && Date.now() < expiry ? token : null;
-}
-function hasConsentHistory() {
-  return !!localStorage.getItem(HAS_CONSENT_KEY);
-}
-function clearStoredToken() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(TOKEN_EXPIRY_KEY);
-}
 
 // ── Timer helpers ──
 function saveTimerStart(durationSeconds) {
@@ -52,18 +30,6 @@ const db = firebase.firestore();
 const USER_ID_KEY = "calmtube_user_id";
 let currentUserId = localStorage.getItem(USER_ID_KEY) || null;
 
-async function fetchAndStoreUserId() {
-  try {
-    const res  = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    const info = await res.json();
-    currentUserId = info.sub;
-    localStorage.setItem(USER_ID_KEY, info.sub);
-  } catch (err) {
-    console.warn("Could not fetch user info:", err);
-  }
-}
 
 async function loadChannelSelection() {
   // localStorage is the primary store — instant and no race conditions.
@@ -105,7 +71,6 @@ async function saveChannelSelection(channelIds) {
 
 // ── State ──
 let accessToken        = null;
-let tokenClient        = null;
 let currentChannelId   = null;
 let currentChannelTitle = null;
 let currentSort        = "new";
@@ -137,68 +102,62 @@ function showError(message) {
   showScreen("error");
 }
 
-// ── Google Auth ──
-let silentRefreshTimeout = null;
+// ── Auth ──
+let refreshTimeout = null;
 
-async function handleAuthResponse(response) {
-  if (silentRefreshTimeout) {
-    clearTimeout(silentRefreshTimeout);
-    silentRefreshTimeout = null;
-  }
-  if (response.error) {
-    clearStoredToken();
+async function initAuth() {
+  if (new URLSearchParams(location.search).get("auth_error")) {
+    history.replaceState({}, "", "/");
     showScreen("login");
     return;
   }
-  // Clear any stale timer so a fresh login always starts at full time
-  clearTimerStorage();
-  accessToken = response.access_token;
-  storeToken(response.access_token);
-  await fetchAndStoreUserId();
-  loadSubscriptions();
-}
-
-function initGoogleAuth() {
-  if (!window.google || !window.google.accounts) {
-    setTimeout(initGoogleAuth, 100);
-    return;
+  showScreen("loading");
+  try {
+    const res = await fetch("/api/token");
+    if (res.ok) {
+      const data = await res.json();
+      accessToken   = data.access_token;
+      currentUserId = data.user_id;
+      localStorage.setItem(USER_ID_KEY, data.user_id);
+      scheduleTokenRefresh(data.expires_in);
+      loadSubscriptions();
+      return;
+    }
+  } catch (err) {
+    console.warn("Session check failed:", err);
   }
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CONFIG.GOOGLE_CLIENT_ID,
-    scope: "https://www.googleapis.com/auth/youtube.readonly",
-    callback: handleAuthResponse,
-  });
-
-  const stored = getStoredToken();
-  if (stored) {
-    accessToken = stored;
-    fetchAndStoreUserId(); // fire and forget — userId ready before user reaches settings
-    loadSubscriptions();
-    return;
-  }
-
-  // Token expired but user has signed in before — try silent refresh.
-  // If Google session is still active it returns a new token with no UI.
-  // If it fails or hangs, the timeout falls back to the login screen.
-  if (hasConsentHistory()) {
-    showScreen("loading");
-    silentRefreshTimeout = setTimeout(() => {
-      silentRefreshTimeout = null;
-      showScreen("login");
-    }, 2500);
-    tokenClient.requestAccessToken({ prompt: "none" });
-    return;
-  }
-
   showScreen("login");
 }
 
+function scheduleTokenRefresh(expiresIn) {
+  if (refreshTimeout) clearTimeout(refreshTimeout);
+  const ms = Math.max((expiresIn - 300) * 1000, 30000);
+  refreshTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch("/api/token");
+      if (res.ok) {
+        const data = await res.json();
+        accessToken = data.access_token;
+        scheduleTokenRefresh(data.expires_in);
+      } else {
+        showScreen("login");
+      }
+    } catch (err) {
+      console.warn("Token refresh failed:", err);
+    }
+  }, ms);
+}
+
 function startLogin() {
-  if (!tokenClient) {
-    showError("Login is still loading. Please wait a moment and try again.");
-    return;
-  }
-  tokenClient.requestAccessToken({ prompt: "select_account" });
+  const params = new URLSearchParams({
+    client_id:     CONFIG.GOOGLE_CLIENT_ID,
+    redirect_uri:  "https://calmtube.vercel.app/api/auth",
+    response_type: "code",
+    scope:         "https://www.googleapis.com/auth/youtube.readonly openid",
+    access_type:   "offline",
+    prompt:        "consent",
+  });
+  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
 }
 
 // ── Global timer ──
@@ -341,8 +300,8 @@ function updateSettingsChannelCount() {
   el.textContent = showing === total ? "All channels" : `${showing} of ${total}`;
 }
 
-function logout() {
-  clearStoredToken();
+async function logout() {
+  if (refreshTimeout) { clearTimeout(refreshTimeout); refreshTimeout = null; }
   clearTimerStorage();
   localStorage.removeItem(USER_ID_KEY);
   currentUserId = null;
@@ -350,6 +309,7 @@ function logout() {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   document.getElementById("global-timer").classList.add("hidden");
   document.getElementById("settings-btn").classList.add("hidden");
+  try { await fetch("/api/logout"); } catch {}
   showScreen("login");
 }
 
@@ -785,4 +745,4 @@ window.addEventListener("popstate", event => {
   if (state.screen === "channelDetail") showScreen("channelDetail");
 });
 
-initGoogleAuth();
+initAuth();
