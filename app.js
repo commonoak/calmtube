@@ -159,6 +159,7 @@ function initGoogleAuth() {
   const stored = getStoredToken();
   if (stored) {
     accessToken = stored;
+    fetchAndStoreUserId(); // fire and forget — userId ready before user reaches settings
     loadSubscriptions();
     return;
   }
