@@ -1,11 +1,12 @@
 // CalmTube — main app logic
 
 // ── Storage keys ──
-const TOKEN_KEY          = "calmtube_token";
-const TOKEN_EXPIRY_KEY   = "calmtube_token_expiry";
-const HAS_CONSENT_KEY    = "calmtube_has_consent";
-const TIMER_START_KEY    = "calmtube_timer_start";
-const TIMER_DURATION_KEY = "calmtube_timer_duration";
+const TOKEN_KEY              = "calmtube_token";
+const TOKEN_EXPIRY_KEY       = "calmtube_token_expiry";
+const HAS_CONSENT_KEY        = "calmtube_has_consent";
+const TIMER_START_KEY        = "calmtube_timer_start";
+const TIMER_DURATION_KEY     = "calmtube_timer_duration";
+const CHANNEL_SELECTION_KEY  = "calmtube_channel_selection";
 
 // ── Token helpers ──
 function storeToken(token) {
@@ -65,13 +66,22 @@ async function fetchAndStoreUserId() {
 }
 
 async function loadChannelSelection() {
+  // localStorage is the primary store — instant and no race conditions.
+  const local = localStorage.getItem(CHANNEL_SELECTION_KEY);
+  if (local !== null) {
+    return local === "all" ? null : JSON.parse(local);
+  }
+  // No local record yet — try Firestore (returning user on a new device).
   if (!currentUserId) return undefined;
   try {
     const doc = await db.collection("users").doc(currentUserId).get();
     if (doc.exists && doc.data().selectedChannelIds !== undefined) {
-      return doc.data().selectedChannelIds;
+      const sel = doc.data().selectedChannelIds;
+      // Hydrate localStorage so future loads are instant.
+      localStorage.setItem(CHANNEL_SELECTION_KEY, sel === null ? "all" : JSON.stringify(sel));
+      return sel;
     }
-    return undefined; // no record yet
+    return undefined;
   } catch (err) {
     console.warn("Firestore load failed:", err);
     return undefined;
@@ -79,6 +89,9 @@ async function loadChannelSelection() {
 }
 
 async function saveChannelSelection(channelIds) {
+  // Write to localStorage immediately so the change is visible right away.
+  localStorage.setItem(CHANNEL_SELECTION_KEY, channelIds === null ? "all" : JSON.stringify(channelIds));
+  // Sync to Firestore in the background for cross-device persistence.
   if (!currentUserId) return;
   try {
     await db.collection("users").doc(currentUserId).set({
@@ -86,7 +99,7 @@ async function saveChannelSelection(channelIds) {
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
   } catch (err) {
-    console.warn("Firestore save failed:", err);
+    console.warn("Firestore sync failed:", err);
   }
 }
 
@@ -332,6 +345,7 @@ function logout() {
   clearStoredToken();
   clearTimerStorage();
   localStorage.removeItem(USER_ID_KEY);
+  localStorage.removeItem(CHANNEL_SELECTION_KEY);
   currentUserId = null;
   accessToken   = null;
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
