@@ -416,22 +416,40 @@ main {
 
 .selector-headline {
   font-family: var(--ct-serif);
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 400;
   line-height: 1.1;
   letter-spacing: -0.02em;
   color: var(--ct-ink);
-  margin: 6px 0 8px;
+  margin: 6px 0 0;
 }
 
 .selector-headline em {
   font-style: italic;
 }
 
-.selector-sub {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--ct-ink-muted);
+.selector-done-btn {
+  flex-shrink: 0;
+  background: var(--ct-green);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-family: var(--ct-sans);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.selector-done-btn:active {
+  opacity: 0.82;
+}
+
+/* Search wrap — position:relative so the results dropdown anchors to it */
+.selector-search-wrap {
+  position: relative;
+  margin: 14px 0;
 }
 
 .selector-search-row {
@@ -443,7 +461,6 @@ main {
   border-radius: 12px;
   padding: 0 14px;
   height: 44px;
-  margin: 16px 0;
   color: var(--ct-ink-muted);
 }
 
@@ -461,56 +478,65 @@ main {
   color: var(--ct-ink-faint);
 }
 
-.selector-list-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 20px;
-  background: var(--ct-bg);
-  border-bottom: 1px solid var(--ct-hairline);
-  flex-shrink: 0;
+.selector-search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--ct-hairline);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  z-index: 50;
+  overflow: hidden;
 }
 
-.selector-select-all-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--ct-green);
-  font-family: var(--ct-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  padding: 4px 0;
+.selector-search-status {
+  padding: 16px 20px;
+  color: var(--ct-ink-muted);
+  font-size: 14px;
 }
 
-.selector-list {
+/* Scrollable body — holds both lists */
+.selector-body {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.selector-section-label {
+  font-family: var(--ct-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ct-ink-muted);
+  padding: 16px 20px 8px;
+  background: var(--ct-bg);
+  border-bottom: 1px solid var(--ct-hairline);
+}
+
+.selector-list {
+  /* no flex or overflow here — lives inside .selector-body */
 }
 
 .selector-row {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 20px;
+  padding: 11px 20px;
   border-bottom: 1px solid var(--ct-hairline);
-  cursor: pointer;
   transition: background 0.1s;
 }
 
-.selector-row:active {
-  background: var(--ct-bg-deep);
-}
-
 .selector-avatar {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
   border: 1px solid var(--ct-hairline);
+  background: var(--ct-bg-deep);
 }
 
 .selector-channel-name {
@@ -521,52 +547,68 @@ main {
   line-height: 1.3;
 }
 
-.selector-checkbox {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  border: 1.5px solid var(--ct-hairline);
-  background: var(--ct-cream);
+.selector-add-btn {
   flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ct-green);
+  background: transparent;
+  color: var(--ct-green);
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 300;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.12s, border-color 0.12s;
+  transition: background 0.12s, color 0.12s;
 }
 
-.selector-checkbox.checked {
-  background: var(--ct-green);
-  border-color: var(--ct-green);
-}
-
-.selector-footer {
-  flex-shrink: 0;
-  padding: 16px 20px 32px;
-  background: linear-gradient(to bottom, transparent, var(--ct-bg) 40%);
-  /* overlay the list slightly */
-  margin-top: -40px;
-  padding-top: 56px;
-  pointer-events: none;
-}
-
-.selector-save-btn {
-  pointer-events: all;
-  width: 100%;
-  height: 60px;
+.selector-add-btn:active {
   background: var(--ct-green);
   color: white;
-  border: none;
-  border-radius: 16px;
-  font-family: var(--ct-sans);
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  cursor: pointer;
-  transition: opacity 0.15s;
 }
 
-.selector-save-btn:active {
-  opacity: 0.85;
+.selector-remove-btn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ct-bg-deep);
+  color: var(--ct-ink-muted);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+}
+
+.selector-remove-btn:active {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.selector-added-badge {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ct-green);
+  background: var(--ct-green-faint);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+
+.selector-empty {
+  padding: 16px 20px;
+  color: var(--ct-ink-muted);
+  font-size: 14px;
+}
+
+.selector-error {
+  color: #DC2626;
 }
 
 /* ── PIN input ── */
