@@ -467,7 +467,7 @@ function renderChannels(subscriptions) {
         <img class="channel-thumb" src="${thumb}" alt="${title}">
         <div class="channel-name">${title}</div>
       `;
-      card.addEventListener("click", () => openChannel(channelId, title));
+      card.addEventListener("click", () => openChannel(channelId, title, thumb));
       grid.appendChild(card);
     });
   }
@@ -476,7 +476,7 @@ function renderChannels(subscriptions) {
 }
 
 // ── Channel detail ──
-async function openChannel(channelId, title) {
+async function openChannel(channelId, title, avatarUrl = "") {
   currentChannelId    = channelId;
   currentChannelTitle = title;
   currentSort         = "new";
@@ -484,6 +484,9 @@ async function openChannel(channelId, title) {
   nextPageToken       = null;
 
   document.getElementById("channel-detail-title").textContent = title;
+  const avatarEl = document.getElementById("channel-detail-avatar");
+  avatarEl.src = avatarUrl;
+  avatarEl.alt = title;
   document.getElementById("sort-new").classList.add("active");
   document.getElementById("sort-popular").classList.remove("active");
   document.getElementById("videos-grid").innerHTML = "";

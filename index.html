@@ -10,6 +10,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="config.js" defer></script>
@@ -17,8 +20,16 @@
 </head>
 <body>
   <header id="app-header">
-    <div class="wordmark">
-      <span class="wordmark-calm">Calm</span><span class="wordmark-tube">tube</span>
+    <div class="header-logo">
+      <svg width="28" height="28" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CalmTube" aria-hidden="true">
+        <rect x="8" y="14" width="48" height="36" rx="7" fill="var(--ct-green, #3A7D7B)"/>
+        <rect x="13" y="19" width="38" height="26" rx="3.2" fill="var(--ct-bg, #F4EFE4)"/>
+        <path d="M21 33 Q 32 39, 43 33" stroke="var(--ct-green, #3A7D7B)" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+        <rect x="27" y="50" width="10" height="2.4" rx="1.2" fill="var(--ct-green, #3A7D7B)"/>
+      </svg>
+      <div class="wordmark">
+        <span class="wordmark-calm">Calm</span><span class="wordmark-tube">tube</span>
+      </div>
     </div>
     <div class="header-right">
       <button id="settings-btn" class="icon-btn hidden" title="Settings">
@@ -79,8 +90,16 @@
     <section id="login-screen" class="screen">
       <div class="hero">
         <div class="hero-top-bar">
-          <div class="wordmark">
-            <span class="wordmark-calm">Calm</span><span class="wordmark-tube">tube</span>
+          <div class="header-logo">
+            <svg width="28" height="28" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="8" y="14" width="48" height="36" rx="7" fill="var(--ct-green, #3A7D7B)"/>
+              <rect x="13" y="19" width="38" height="26" rx="3.2" fill="var(--ct-bg, #F4EFE4)"/>
+              <path d="M21 33 Q 32 39, 43 33" stroke="var(--ct-green, #3A7D7B)" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+              <rect x="27" y="50" width="10" height="2.4" rx="1.2" fill="var(--ct-green, #3A7D7B)"/>
+            </svg>
+            <div class="wordmark">
+              <span class="wordmark-calm">Calm</span><span class="wordmark-tube">tube</span>
+            </div>
           </div>
           <span class="mono-label">V1.0</span>
         </div>
@@ -101,7 +120,12 @@
 
     <section id="loading-screen" class="screen hidden">
       <div class="loading-wrap">
-        <div class="spinner"></div>
+        <svg width="96" height="96" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="loading-mark">
+          <rect x="8" y="14" width="48" height="36" rx="7" fill="var(--ct-green, #3A7D7B)"/>
+          <rect x="13" y="19" width="38" height="26" rx="3.2" fill="var(--ct-bg, #F4EFE4)"/>
+          <path d="M21 33 Q 32 39, 43 33" stroke="var(--ct-green, #3A7D7B)" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+          <rect x="27" y="50" width="10" height="2.4" rx="1.2" fill="var(--ct-green, #3A7D7B)"/>
+        </svg>
         <p class="loading">Loading your channels…</p>
       </div>
     </section>
@@ -119,7 +143,10 @@
             <button id="sort-popular" class="sort-btn">Popular</button>
           </div>
         </div>
-        <h2 id="channel-detail-title"></h2>
+        <div class="detail-channel-identity">
+          <img id="channel-detail-avatar" class="channel-detail-avatar" src="" alt="">
+          <h2 id="channel-detail-title"></h2>
+        </div>
       </div>
       <div id="channel-detail-body" class="channel-detail-body">
         <div id="videos-grid" class="videos-grid"></div>

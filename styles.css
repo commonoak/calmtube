@@ -77,6 +77,14 @@ body {
   color: var(--ct-ink-muted);
 }
 
+/* ── Header logo (mark + wordmark lockup) ── */
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* ── Header ── */
 
 #app-header {
@@ -619,6 +627,15 @@ main {
   margin-top: 80px;
 }
 
+.loading-mark {
+  animation: loading-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes loading-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
 .spinner {
   width: 44px;
   height: 44px;
@@ -792,12 +809,27 @@ main {
   background: #F9FAFB;
 }
 
-.detail-header h2 {
+.detail-channel-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 14px 0;
+}
+
+.channel-detail-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.detail-channel-identity h2 {
   font-size: 21px;
   font-weight: 800;
   color: #111827;
   line-height: 1.2;
-  padding: 10px 4px 14px 14px;
+  padding: 2px 4px 2px 14px;
   border-left: 3px solid rgba(5, 150, 105, 0.35);
 }
 
