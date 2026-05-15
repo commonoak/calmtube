@@ -78,7 +78,6 @@ async function loadChannelList() {
   if (cached) {
     allChannels = JSON.parse(cached);
     renderChannels(allChannels);
-    startGlobalTimer();
     return;
   }
   // 2. Firestore — returning user on a new device
@@ -89,7 +88,6 @@ async function loadChannelList() {
         allChannels = doc.data().channels;
         localStorage.setItem(CHANNEL_LIST_KEY, JSON.stringify(allChannels));
         renderChannels(allChannels);
-        startGlobalTimer();
         return;
       }
     } catch (err) {
@@ -477,11 +475,7 @@ async function selectorDone() {
   }
   await saveChannelList();
   renderChannels(allChannels);
-  if (selectorIsFirstTime) {
-    startGlobalTimer();
-  } else {
-    updateSettingsChannelCount();
-  }
+  if (!selectorIsFirstTime) updateSettingsChannelCount();
 }
 
 // ── Channels grid ──
@@ -505,6 +499,9 @@ function renderChannels(channels) {
   }
   history.replaceState({ screen: "channels" }, "");
   showScreen("channels");
+  // Always ensure the settings button and timer are visible on the channels screen
+  document.getElementById("settings-btn").classList.remove("hidden");
+  if (!timerInterval) startGlobalTimer();
 }
 
 // ── Channel detail ──
