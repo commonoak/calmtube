@@ -35,18 +35,8 @@ let defaultChannelDetails = null; // cached once per session
 
 // ── Default recommended channels ──
 const DEFAULT_CHANNEL_IDS = [
-  "UCsXVk37bltHxD1rDPwtNM8Q", // Kurzgesagt – In a Nutshell
-  "UCBcRF18a7Qf58cCRy5xuWwQ", // Mark Rober
-  "UCsooa4yRKGN_zEE8iknghZA", // TED-Ed
-  "UCHnyfMqiRRG1u-2MsSQLbXA", // Veritasium
-  "UC2C_jShtL725hvbm1arSV9w", // CGP Grey
-  "UCZYTClx2T1of7BRZ86-8fow", // SciShow
-  "UCnQPMsFBxHVMCejzBsCtbKg", // SciShow Kids
-  "UCX6b17PVsYBQ0ip5gyeme-Q", // Crash Course
-  "UCoxcjq-8xIDTYp3uz647V5A", // Numberphile
-  "UC6nSFpj9HTCZ5t-N3Rm3-HA", // Vsauce
   "UCpVm7bg6pXKo1Pr6k5kxG9A", // National Geographic
-  "UCWX3yGbODI3HLsAOBQhIzYA", // Be Smart
+  "UCwmZiChSryoWQCZPIJlaVGQ", // BBC Earth
 ];
 
 // ── YouTube API (via server-side proxy) ──
@@ -487,7 +477,11 @@ async function selectorDone() {
   }
   await saveChannelList();
   renderChannels(allChannels);
-  if (!selectorIsFirstTime) updateSettingsChannelCount();
+  if (selectorIsFirstTime) {
+    startGlobalTimer();
+  } else {
+    updateSettingsChannelCount();
+  }
 }
 
 // ── Channels grid ──
