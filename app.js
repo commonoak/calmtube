@@ -239,7 +239,7 @@ function updateTimerDisplays(seconds) {
 }
 
 function timeIsUp() {
-  document.getElementById("youtube-player").src = "";
+  destroyPlayer();
   showScreen("timesup");
 }
 
@@ -317,7 +317,6 @@ function confirmReset() {
   }
   resetTimer(selectedMinutes * 60);
   if (resetModalOrigin === "timesup") {
-    history.replaceState({ screen: "channels" }, "");
     showScreen("channels");
   }
 }
@@ -506,7 +505,6 @@ function renderChannels(channels) {
       grid.appendChild(card);
     });
   }
-  history.replaceState({ screen: "channels" }, "");
   showScreen("channels");
   // Always ensure the settings button and timer are visible on the channels screen
   document.getElementById("settings-btn").classList.remove("hidden");
@@ -531,7 +529,6 @@ async function openChannel(channelId, title, avatarUrl = "") {
   document.getElementById("load-more-container").classList.add("hidden");
 
   document.getElementById("channel-detail-body").scrollTop = 0;
-  history.pushState({ screen: "channelDetail", channelId, channelTitle: title }, "");
   showScreen("channelDetail");
   await loadVideos(false);
 }
@@ -652,10 +649,19 @@ function setSort(sort) {
 
 // ── Player ──
 function openPlayer(videoId) {
-  const iframe = document.getElementById("youtube-player");
-  iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
-  history.pushState({ screen: "player" }, "");
+  const wrapper = document.querySelector(".player-wrapper");
+  wrapper.innerHTML = `<iframe id="youtube-player"
+    src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1"
+    frameborder="0"
+    allow="autoplay; encrypted-media; picture-in-picture"
+    allowfullscreen></iframe>`;
   showScreen("player");
+}
+
+function destroyPlayer() {
+  const wrapper = document.querySelector(".player-wrapper");
+  wrapper.innerHTML = `<iframe id="youtube-player" src="" frameborder="0"
+    allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
 }
 
 // ── Utilities ──
@@ -720,13 +726,19 @@ document.addEventListener("click", e => {
   }
 });
 
-document.getElementById("back-to-channels").addEventListener("click", () => history.back());
+document.getElementById("back-to-channels").addEventListener("click", () => {
+  destroyPlayer();
+  showScreen("channels");
+});
 
 document.getElementById("sort-new").addEventListener("click",     () => setSort("new"));
 document.getElementById("sort-popular").addEventListener("click", () => setSort("popular"));
 document.getElementById("load-more-button").addEventListener("click", () => loadVideos(true));
 
-document.getElementById("back-to-channel").addEventListener("click", () => history.back());
+document.getElementById("back-to-channel").addEventListener("click", () => {
+  destroyPlayer();
+  showScreen("channelDetail");
+});
 
 document.getElementById("global-timer").addEventListener("click", () => openResetModal("header"));
 document.getElementById("player-reset-btn").addEventListener("click", (e) => { e.stopPropagation(); openResetModal("header"); });
@@ -755,14 +767,6 @@ document.getElementById("parent-reset-input").addEventListener("blur", () => {
 });
 document.getElementById("parent-reset-input").addEventListener("keydown", e => {
   if (e.key === "Enter") confirmReset();
-});
-
-window.addEventListener("popstate", event => {
-  const state = event.state;
-  if (!state) return;
-  document.getElementById("youtube-player").src = "";
-  if (state.screen === "channels")      showScreen("channels");
-  if (state.screen === "channelDetail") showScreen("channelDetail");
 });
 
 initAuth();
