@@ -867,6 +867,29 @@ main {
   word-break: break-word;
 }
 
+.channels-actions {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 40px;
+  width: 100%;
+}
+
+.channels-edit-btn {
+  background: transparent;
+  border: 1.5px solid var(--ct-hairline);
+  color: var(--ct-ink-soft);
+  padding: 12px 22px;
+  font-family: var(--ct-sans);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.channels-edit-btn:active {
+  background: var(--ct-bg-deep);
+}
+
 /* ── Channel detail ── */
 
 #channel-detail-screen {

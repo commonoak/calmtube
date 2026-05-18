@@ -101,15 +101,15 @@
         </div>
         <p class="hero-overline">A focused viewer for YouTube</p>
         <h1 class="hero-headline">A calmer way to <em>watch.</em></h1>
-        <p class="hero-sub">CalmTube shows kids only the channels you subscribe to. No algorithm. No autoplay. No rabbit holes.</p>
+        <p class="hero-sub">CalmTube lets you pick exactly which channels your kids can watch. No algorithm. No autoplay. No rabbit holes.</p>
         <ol class="hero-features">
-          <li><span class="feature-num">01</span><span>Subscribed channels, nothing else</span></li>
+          <li><span class="feature-num">01</span><span>Only channels you choose</span></li>
           <li><span class="feature-num">02</span><span>No autoplay or recommendations</span></li>
           <li><span class="feature-num">03</span><span>A timer that nudges kids outside</span></li>
         </ol>
         <div class="hero-cta">
-          <button id="login-button" class="cta-primary">Continue with Google</button>
-          <p class="cta-note">Uses your existing YouTube subscriptions</p>
+          <button id="login-button" class="cta-primary">Watch calmly</button>
+          <p class="cta-note">Sign in any time to save channels across devices</p>
         </div>
       </div>
     </section>
@@ -128,6 +128,9 @@
 
     <section id="channels-screen" class="screen hidden">
       <div id="channels-grid" class="channels-grid"></div>
+      <div class="channels-actions">
+        <button id="channels-edit-btn" type="button" class="channels-edit-btn">Edit channel list</button>
+      </div>
     </section>
 
     <section id="channel-detail-screen" class="screen hidden">
@@ -294,7 +297,16 @@
             <path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
-        <button class="settings-row settings-row-danger" id="settings-logout">
+        <button class="settings-row hidden" id="settings-signin">
+          <div class="settings-row-text">
+            <span class="settings-row-label">Sign in with Google</span>
+            <span class="settings-row-meta">Save channels across devices</span>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="settings-row settings-row-danger hidden" id="settings-logout">
           <span class="settings-row-label">Sign out</span>
         </button>
       </div>

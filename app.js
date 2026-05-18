@@ -154,8 +154,6 @@ async function initAuth() {
   const params = new URLSearchParams(location.search);
   if (params.get("auth_error")) {
     history.replaceState({}, "", "/");
-    showScreen("login");
-    return;
   }
   const isFreshLogin = params.get("fresh") === "1";
   if (isFreshLogin) {
@@ -169,13 +167,59 @@ async function initAuth() {
       const data = await res.json();
       currentUserId = data.user_id;
       localStorage.setItem(USER_ID_KEY, data.user_id);
-      await loadChannelList();
-      return;
     }
   } catch (err) {
     console.warn("Session check failed:", err);
   }
-  showScreen("login");
+  await enterApp(isFreshLogin);
+}
+
+async function enterApp(forceServerSync = false) {
+  // Show hero only on truly first visit: no local channels and not logged in
+  const hasLocal = !!localStorage.getItem(CHANNEL_LIST_KEY);
+  if (!hasLocal && !currentUserId) {
+    document.getElementById("hero-back-btn").classList.add("hidden");
+    document.getElementById("hero-version").classList.remove("hidden");
+    showScreen("login");
+    return;
+  }
+  if (forceServerSync && currentUserId) {
+    // Just signed in — prefer the server list (cross-device source of truth)
+    try {
+      const doc = await db.collection("users").doc(currentUserId).get();
+      if (doc.exists && Array.isArray(doc.data().channels) && doc.data().channels.length > 0) {
+        allChannels = doc.data().channels;
+        localStorage.setItem(CHANNEL_LIST_KEY, JSON.stringify(allChannels));
+        renderChannels(allChannels);
+        return;
+      }
+      // Server empty — push local up so this device's choices propagate
+      const cached = localStorage.getItem(CHANNEL_LIST_KEY);
+      if (cached) {
+        allChannels = JSON.parse(cached);
+        await saveChannelList();
+        renderChannels(allChannels);
+        return;
+      }
+    } catch (err) {
+      console.warn("Server sync failed:", err);
+    }
+  }
+  await loadChannelList();
+}
+
+async function startWatching() {
+  // Hero "Watch calmly" — load defaults if no list yet, then enter the app
+  if (!localStorage.getItem(CHANNEL_LIST_KEY)) {
+    try {
+      const defaults = await getDefaultChannels();
+      if (defaults.length > 0) {
+        allChannels = defaults;
+        localStorage.setItem(CHANNEL_LIST_KEY, JSON.stringify(allChannels));
+      }
+    } catch {}
+  }
+  await loadChannelList();
 }
 
 function startLogin() {
@@ -324,7 +368,14 @@ function confirmReset() {
 // ── Settings ──
 function openSettings() {
   updateSettingsChannelCount();
+  updateSettingsAuthRows();
   showScreen("settings");
+}
+
+function updateSettingsAuthRows() {
+  const isLoggedIn = !!currentUserId;
+  document.getElementById("settings-signin").classList.toggle("hidden", isLoggedIn);
+  document.getElementById("settings-logout").classList.toggle("hidden", !isLoggedIn);
 }
 
 function updateSettingsChannelCount() {
@@ -344,6 +395,8 @@ async function logout() {
   document.getElementById("global-timer").classList.add("hidden");
   document.getElementById("settings-btn").classList.add("hidden");
   try { await fetch("/api/logout"); } catch {}
+  document.getElementById("hero-back-btn").classList.add("hidden");
+  document.getElementById("hero-version").classList.remove("hidden");
   showScreen("login");
 }
 
@@ -505,6 +558,7 @@ function renderChannels(channels) {
       grid.appendChild(card);
     });
   }
+  history.replaceState({ screen: "channels" }, "");
   showScreen("channels");
   // Always ensure the settings button and timer are visible on the channels screen
   document.getElementById("settings-btn").classList.remove("hidden");
@@ -529,6 +583,7 @@ async function openChannel(channelId, title, avatarUrl = "") {
   document.getElementById("load-more-container").classList.add("hidden");
 
   document.getElementById("channel-detail-body").scrollTop = 0;
+  history.pushState({ screen: "channelDetail", channelId, channelTitle: title }, "");
   showScreen("channelDetail");
   await loadVideos(false);
 }
@@ -655,6 +710,7 @@ function openPlayer(videoId) {
     frameborder="0"
     allow="autoplay; encrypted-media; picture-in-picture"
     allowfullscreen></iframe>`;
+  history.pushState({ screen: "player" }, "");
   showScreen("player");
 }
 
@@ -698,7 +754,7 @@ function timeAgo(dateString) {
 }
 
 // ── Event listeners ──
-document.getElementById("login-button").addEventListener("click", startLogin);
+document.getElementById("login-button").addEventListener("click", startWatching);
 document.getElementById("retry-button").addEventListener("click", () => showScreen("login"));
 
 document.getElementById("header-logo-btn").addEventListener("click", () => {
@@ -720,6 +776,8 @@ document.getElementById("settings-back").addEventListener("click", () => showScr
 document.getElementById("settings-how-it-works").addEventListener("click", showHowItWorks);
 document.getElementById("settings-edit-channels").addEventListener("click", () => openPinGate(() => openChannelSelector(false)));
 document.getElementById("settings-logout").addEventListener("click", () => openPinGate(logout));
+document.getElementById("settings-signin").addEventListener("click", startLogin);
+document.getElementById("channels-edit-btn").addEventListener("click", () => openPinGate(() => openChannelSelector(false)));
 
 document.getElementById("selector-close").addEventListener("click", selectorDone);
 
@@ -736,19 +794,13 @@ document.addEventListener("click", e => {
   }
 });
 
-document.getElementById("back-to-channels").addEventListener("click", () => {
-  destroyPlayer();
-  showScreen("channels");
-});
+document.getElementById("back-to-channels").addEventListener("click", () => history.back());
 
 document.getElementById("sort-new").addEventListener("click",     () => setSort("new"));
 document.getElementById("sort-popular").addEventListener("click", () => setSort("popular"));
 document.getElementById("load-more-button").addEventListener("click", () => loadVideos(true));
 
-document.getElementById("back-to-channel").addEventListener("click", () => {
-  destroyPlayer();
-  showScreen("channelDetail");
-});
+document.getElementById("back-to-channel").addEventListener("click", () => history.back());
 
 document.getElementById("global-timer").addEventListener("click", () => openResetModal("header"));
 document.getElementById("timer-display").addEventListener("click", () => openResetModal("header"));
@@ -776,6 +828,14 @@ document.getElementById("parent-reset-input").addEventListener("blur", () => {
 });
 document.getElementById("parent-reset-input").addEventListener("keydown", e => {
   if (e.key === "Enter") confirmReset();
+});
+
+window.addEventListener("popstate", event => {
+  const state = event.state;
+  if (!state) return;
+  destroyPlayer();
+  if (state.screen === "channels")      showScreen("channels");
+  if (state.screen === "channelDetail") showScreen("channelDetail");
 });
 
 initAuth();
