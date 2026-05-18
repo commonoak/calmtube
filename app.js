@@ -271,12 +271,12 @@ function updatePinDisplay() {
 
 function openResetModal(origin = "header") {
   resetModalOrigin = origin;
-  const isSettings = origin === "settings";
+  const pinOnly = origin === "settings" || origin === "action";
 
-  document.querySelector(".preset-label").style.display  = isSettings ? "none" : "";
-  document.querySelector(".time-presets").style.display  = isSettings ? "none" : "";
+  document.querySelector(".preset-label").style.display  = pinOnly ? "none" : "";
+  document.querySelector(".time-presets").style.display  = pinOnly ? "none" : "";
   document.querySelector("#parent-reset-modal h3").textContent =
-    isSettings ? "Parent Settings" : "Parent Reset";
+    pinOnly ? "Enter parent code" : "Parent Reset";
 
   selectedMinutes = Math.round(CONFIG.WATCH_TIMER_SECONDS / 60);
   document.querySelectorAll(".preset-btn").forEach(btn => {
@@ -293,23 +293,32 @@ function closeResetModal() {
   document.getElementById("parent-reset-modal").classList.add("hidden");
 }
 
+let pendingPinAction = null;
+
+function openPinGate(action) {
+  pendingPinAction = action;
+  openResetModal("action");
+}
+
 function confirmReset() {
   const entered = document.getElementById("parent-reset-input").value;
-  if (entered === CONFIG.PARENT_CODE) {
-    closeResetModal();
-    if (resetModalOrigin === "settings") {
-      openSettings();
-    } else {
-      resetTimer(selectedMinutes * 60);
-      if (resetModalOrigin === "timesup") {
-        history.replaceState({ screen: "channels" }, "");
-        showScreen("channels");
-      }
-    }
-  } else {
+  if (entered !== CONFIG.PARENT_CODE) {
     document.getElementById("parent-reset-error").classList.remove("hidden");
     document.getElementById("parent-reset-input").value = "";
     document.getElementById("parent-reset-input").focus();
+    return;
+  }
+  closeResetModal();
+  if (pendingPinAction) {
+    const action = pendingPinAction;
+    pendingPinAction = null;
+    action();
+    return;
+  }
+  resetTimer(selectedMinutes * 60);
+  if (resetModalOrigin === "timesup") {
+    history.replaceState({ screen: "channels" }, "");
+    showScreen("channels");
   }
 }
 
@@ -686,11 +695,15 @@ function timeAgo(dateString) {
 document.getElementById("login-button").addEventListener("click", startLogin);
 document.getElementById("retry-button").addEventListener("click", () => showScreen("login"));
 
-document.getElementById("settings-btn").addEventListener("click", () => openResetModal("settings"));
+document.getElementById("header-logo-btn").addEventListener("click", () => {
+  if (currentUserId || allChannels.length) showScreen("channels");
+});
+
+document.getElementById("settings-btn").addEventListener("click", openSettings);
 
 document.getElementById("settings-back").addEventListener("click", () => showScreen("channels"));
-document.getElementById("settings-edit-channels").addEventListener("click", () => openChannelSelector(false));
-document.getElementById("settings-logout").addEventListener("click", logout);
+document.getElementById("settings-edit-channels").addEventListener("click", () => openPinGate(() => openChannelSelector(false)));
+document.getElementById("settings-logout").addEventListener("click", () => openPinGate(logout));
 
 document.getElementById("selector-close").addEventListener("click", selectorDone);
 
@@ -707,20 +720,13 @@ document.addEventListener("click", e => {
   }
 });
 
-document.getElementById("back-to-channels").addEventListener("click", () => {
-  history.back();
-  showScreen("channels");
-});
+document.getElementById("back-to-channels").addEventListener("click", () => history.back());
 
 document.getElementById("sort-new").addEventListener("click",     () => setSort("new"));
 document.getElementById("sort-popular").addEventListener("click", () => setSort("popular"));
 document.getElementById("load-more-button").addEventListener("click", () => loadVideos(true));
 
-document.getElementById("back-to-channel").addEventListener("click", () => {
-  document.getElementById("youtube-player").src = "";
-  history.back();
-  showScreen("channelDetail");
-});
+document.getElementById("back-to-channel").addEventListener("click", () => history.back());
 
 document.getElementById("global-timer").addEventListener("click", () => openResetModal("header"));
 document.getElementById("player-reset-btn").addEventListener("click", (e) => { e.stopPropagation(); openResetModal("header"); });
