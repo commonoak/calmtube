@@ -35,10 +35,18 @@ let defaultChannelDetails = null; // cached once per session
 
 // ── Seed channels (loaded on first visit) ──
 const SEED_CHANNEL_IDS = [
-  "UCRWSxXBnz9IRS4SgRhG2wpQ", // Die Maus
+  "UCpxYSWgxVt3Pyn1ovXsGQ0g", // Nature on PBS
+  "UCl7WTOFYpIGKaAS-l0mSGMQ", // Cyprien Adventures
   "UCdsOTr6SmDrxuWE7sJFrkhQ", // BBC Earth
+  "UC1MZgHA2PsX2hlaYo8ECQAw", // Essential Craftsman
+  "UCy4_zQ59zmS7zO4Dc6vbT_w", // Handwerkskunst
   "UC4EQCwfH54ieNPswtXh5K0w", // My Mechanics
-  "UCQtsd17U8NOM1VRI8oxdwiQ", // Checker Welt (Checker Tobi)
+  "UCo5NLbFTwavqrGVWSlMfxfA", // DK Builds
+  "UCYXGHivsMPVU-h-M_wd9m3Q", // The Ocean Cleanup
+  "UCAUGvqd9Zaski4MWoYi1etg", // ATHOS Outdoor Prospector
+  "UC8EQAfueDGNeqb1ALm0LjHA", // Exploring Alternatives
+  "UC5oMecqI0i91UKcODxtSD2w", // Stefan Berger
+  "UCRWSxXBnz9IRS4SgRhG2wpQ", // Die Maus
 ];
 
 // ── YouTube API (via server-side proxy) ──
