@@ -35,15 +35,15 @@ let defaultChannelDetails = null; // cached once per session
 
 // ── Seed channels (loaded on first visit) ──
 const SEED_CHANNEL_IDS = [
-  "UCpxYSWgxVt3Pyn1ovXsGQ0g", // Nature on PBS
-  "UCl7WTOFYpIGKaAS-l0mSGMQ", // Cyprien Adventures
-  "UCdsOTr6SmDrxuWE7sJFrkhQ", // BBC Earth
-  "UC1MZgHA2PsX2hlaYo8ECQAw", // Essential Craftsman
-  "UCy4_zQ59zmS7zO4Dc6vbT_w", // Handwerkskunst
-  "UC4EQCwfH54ieNPswtXh5K0w", // My Mechanics
+  "UCcBp_9YPyma4c3HTadmRJ3Q", // Nature on PBS
+  "UCwFCb4jeqaKWnciAYM-ZVHg", // Cyprien Outdoor Adventures
+  "UCwmZiChSryoWQCZMIQezgTg", // BBC Earth
+  "UCzr30osBdTmuFUS8IfXtXmg", // Essential Craftsman
+  "UC4-a6QWRyBlzTFGdS-T_wfw", // SWR Handwerkskunst
+  "UCMrMVIBtqFW6O0-MWq26gqw", // my mechanics
   "UCo5NLbFTwavqrGVWSlMfxfA", // DK Builds
   "UCYXGHivsMPVU-h-M_wd9m3Q", // The Ocean Cleanup
-  "UCAUGvqd9Zaski4MWoYi1etg", // ATHOS Outdoor Prospector
+  "UCAUGvqd9Zaski4MWoYi1etg", // Athos Outdoor Prospector
   "UC8EQAfueDGNeqb1ALm0LjHA", // Exploring Alternatives
   "UC5oMecqI0i91UKcODxtSD2w", // Stefan Berger
   "UCRWSxXBnz9IRS4SgRhG2wpQ", // Die Maus
