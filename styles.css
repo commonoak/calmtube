@@ -172,6 +172,17 @@ body:has(#login-screen:not(.hidden)) #app-header {
   background: var(--ct-bg-deep);
 }
 
+@media (max-width: 500px) {
+  .header-pill {
+    padding: 0;
+    width: 44px;
+    justify-content: center;
+  }
+  .header-pill span {
+    display: none;
+  }
+}
+
 .header-link {
   background: none;
   border: none;
