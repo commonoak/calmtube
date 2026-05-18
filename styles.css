@@ -125,7 +125,7 @@ body:has(#login-screen:not(.hidden)) #app-header {
   align-items: center;
   gap: 8px;
   height: 44px;
-  padding: 0 8px 0 16px;
+  padding: 0 16px;
   border-radius: 999px;
   background: var(--ct-green-10);
   border: 1px solid var(--ct-green-20);

@@ -227,7 +227,7 @@ function runTimer(startSeconds) {
 
 function updateTimerDisplays(seconds) {
   const m = seconds <= 0 ? 0 : Math.ceil(seconds / 60);
-  const text = `${m} min left`;
+  const text = `${m} min`;
   const isWarning = seconds > 0 && seconds <= 300;
 
   const globalEl = document.getElementById("global-timer-display");
@@ -751,7 +751,6 @@ document.getElementById("back-to-channel").addEventListener("click", () => {
 });
 
 document.getElementById("global-timer").addEventListener("click", () => openResetModal("header"));
-document.getElementById("player-reset-btn").addEventListener("click", (e) => { e.stopPropagation(); openResetModal("header"); });
 document.getElementById("timer-display").addEventListener("click", () => openResetModal("header"));
 document.getElementById("timesup-illustration").addEventListener("click", () => openResetModal("timesup"));
 document.getElementById("parent-reset-cancel").addEventListener("click",  closeResetModal);
