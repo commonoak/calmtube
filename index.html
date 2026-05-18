@@ -50,6 +50,18 @@
     </div>
   </header>
 
+  <!-- Sign in prompt modal -->
+  <div id="signin-prompt-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>Sign in to customize</h3>
+      <p>Customizing your channel list requires signing in with Google so your choices are saved and sync across your devices.</p>
+      <div class="modal-buttons">
+        <button id="signin-cancel" type="button" class="modal-btn-secondary">Maybe later</button>
+        <button id="signin-confirm" type="button" class="modal-btn-primary">Sign in</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Parent reset modal -->
   <div id="parent-reset-modal" class="modal-overlay hidden">
     <div class="modal-card">
@@ -335,10 +347,6 @@
       <div class="selector-body">
         <div class="selector-section-label">Your channels</div>
         <div id="selector-list" class="selector-list"></div>
-        <div class="selector-section-label">Recommended</div>
-        <div id="selector-recommended" class="selector-list">
-          <p class="selector-empty">Loading recommendations…</p>
-        </div>
       </div>
     </section>
 

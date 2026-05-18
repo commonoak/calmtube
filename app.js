@@ -33,10 +33,12 @@ let currentUserId = localStorage.getItem(USER_ID_KEY) || null;
 let allChannels = [];
 let defaultChannelDetails = null; // cached once per session
 
-// ── Default recommended channels ──
-const DEFAULT_CHANNEL_IDS = [
-  "UCpVm7bg6pXKo1Pr6k5kxG9A", // National Geographic
-  "UCwmZiChSryoWQCZPIJlaVGQ", // BBC Earth
+// ── Seed channels (loaded on first visit) ──
+const SEED_CHANNEL_IDS = [
+  "UCRWSxXBnz9IRS4SgRhG2wpQ", // Die Maus
+  "UCdsOTr6SmDrxuWE7sJFrkhQ", // BBC Earth
+  "UC4EQCwfH54ieNPswtXh5K0w", // My Mechanics
+  "UCQtsd17U8NOM1VRI8oxdwiQ", // Checker Welt (Checker Tobi)
 ];
 
 // ── YouTube API (via server-side proxy) ──
@@ -67,7 +69,7 @@ async function fetchChannelDetails(channelIds) {
 
 async function getDefaultChannels() {
   if (defaultChannelDetails) return defaultChannelDetails;
-  defaultChannelDetails = await fetchChannelDetails(DEFAULT_CHANNEL_IDS);
+  defaultChannelDetails = await fetchChannelDetails(SEED_CHANNEL_IDS);
   return defaultChannelDetails;
 }
 
@@ -94,14 +96,22 @@ async function loadChannelList() {
       console.warn("Firestore load failed:", err);
     }
   }
-  // 3. New user — pre-load defaults, show selector
+  // 3. Brand-new state — seed with the default channel list and persist
   showScreen("loading");
   try {
-    allChannels = await getDefaultChannels();
-  } catch {
-    allChannels = [];
+    const seeds = await getDefaultChannels();
+    if (seeds.length > 0) {
+      allChannels = seeds;
+      localStorage.setItem(CHANNEL_LIST_KEY, JSON.stringify(allChannels));
+      if (currentUserId) await saveChannelList();
+      renderChannels(allChannels);
+      return;
+    }
+  } catch (err) {
+    console.warn("Seed load failed:", err);
   }
-  openChannelSelector(true);
+  allChannels = [];
+  renderChannels(allChannels);
 }
 
 async function saveChannelList() {
@@ -184,16 +194,17 @@ async function enterApp(forceServerSync = false) {
     return;
   }
   if (forceServerSync && currentUserId) {
-    // Just signed in — prefer the server list (cross-device source of truth)
+    // Just signed in — Firestore is source of truth when it has data,
+    // otherwise upload the local list to seed the account.
     try {
       const doc = await db.collection("users").doc(currentUserId).get();
-      if (doc.exists && Array.isArray(doc.data().channels) && doc.data().channels.length > 0) {
-        allChannels = doc.data().channels;
+      const server = (doc.exists && Array.isArray(doc.data().channels)) ? doc.data().channels : [];
+      if (server.length > 0) {
+        allChannels = server;
         localStorage.setItem(CHANNEL_LIST_KEY, JSON.stringify(allChannels));
         renderChannels(allChannels);
         return;
       }
-      // Server empty — push local up so this device's choices propagate
       const cached = localStorage.getItem(CHANNEL_LIST_KEY);
       if (cached) {
         allChannels = JSON.parse(cached);
@@ -206,6 +217,22 @@ async function enterApp(forceServerSync = false) {
     }
   }
   await loadChannelList();
+}
+
+function startEditChannels() {
+  if (!currentUserId) {
+    showSignInPrompt();
+    return;
+  }
+  openPinGate(() => openChannelSelector(false));
+}
+
+function showSignInPrompt() {
+  document.getElementById("signin-prompt-modal").classList.remove("hidden");
+}
+
+function closeSignInPrompt() {
+  document.getElementById("signin-prompt-modal").classList.add("hidden");
 }
 
 async function startWatching() {
@@ -411,20 +438,13 @@ async function openChannelSelector(firstTime = false) {
   document.getElementById("selector-search-results").classList.add("hidden");
   renderSelectorMyChannels();
   showScreen("channelSelector");
-  // Load recommended in background
-  try {
-    const defaults = await getDefaultChannels();
-    renderSelectorRecommended(defaults);
-  } catch {
-    document.getElementById("selector-recommended").innerHTML = "";
-  }
 }
 
 function renderSelectorMyChannels() {
   const list = document.getElementById("selector-list");
   list.innerHTML = "";
   if (allChannels.length === 0) {
-    list.innerHTML = '<p class="selector-empty">No channels yet — search above or add from Recommended.</p>';
+    list.innerHTML = '<p class="selector-empty">No channels yet — search above to add some.</p>';
     return;
   }
   allChannels.forEach(ch => {
@@ -436,28 +456,6 @@ function renderSelectorMyChannels() {
       <button class="selector-remove-btn" aria-label="Remove ${ch.title}">✕</button>
     `;
     row.querySelector(".selector-remove-btn").addEventListener("click", () => removeChannel(ch.channelId));
-    list.appendChild(row);
-  });
-}
-
-function renderSelectorRecommended(defaults) {
-  const list = document.getElementById("selector-recommended");
-  list.innerHTML = "";
-  const addedIds = new Set(allChannels.map(c => c.channelId));
-  const available = defaults.filter(c => !addedIds.has(c.channelId));
-  if (available.length === 0) {
-    list.innerHTML = '<p class="selector-empty">You\'ve added all recommended channels.</p>';
-    return;
-  }
-  available.forEach(ch => {
-    const row = document.createElement("div");
-    row.className = "selector-row";
-    row.innerHTML = `
-      <img class="selector-avatar" src="${ch.thumbnail}" alt="${ch.title}" onerror="this.style.opacity='0'">
-      <span class="selector-channel-name">${ch.title}</span>
-      <button class="selector-add-btn" aria-label="Add ${ch.title}">+</button>
-    `;
-    row.querySelector(".selector-add-btn").addEventListener("click", () => addChannel(ch));
     list.appendChild(row);
   });
 }
@@ -517,14 +515,12 @@ async function addChannel(channel) {
   allChannels = [...allChannels, channel];
   await saveChannelList();
   renderSelectorMyChannels();
-  if (defaultChannelDetails) renderSelectorRecommended(defaultChannelDetails);
 }
 
 async function removeChannel(channelId) {
   allChannels = allChannels.filter(c => c.channelId !== channelId);
   await saveChannelList();
   renderSelectorMyChannels();
-  if (defaultChannelDetails) renderSelectorRecommended(defaultChannelDetails);
 }
 
 async function selectorDone() {
@@ -774,10 +770,15 @@ document.getElementById("settings-btn").addEventListener("click", openSettings);
 
 document.getElementById("settings-back").addEventListener("click", () => showScreen("channels"));
 document.getElementById("settings-how-it-works").addEventListener("click", showHowItWorks);
-document.getElementById("settings-edit-channels").addEventListener("click", () => openPinGate(() => openChannelSelector(false)));
+document.getElementById("settings-edit-channels").addEventListener("click", startEditChannels);
 document.getElementById("settings-logout").addEventListener("click", () => openPinGate(logout));
 document.getElementById("settings-signin").addEventListener("click", startLogin);
-document.getElementById("channels-edit-btn").addEventListener("click", () => openPinGate(() => openChannelSelector(false)));
+document.getElementById("channels-edit-btn").addEventListener("click", startEditChannels);
+document.getElementById("signin-cancel").addEventListener("click", closeSignInPrompt);
+document.getElementById("signin-confirm").addEventListener("click", () => {
+  closeSignInPrompt();
+  startLogin();
+});
 
 document.getElementById("selector-close").addEventListener("click", selectorDone);
 
