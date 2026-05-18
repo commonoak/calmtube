@@ -2,3 +2,8 @@
 .vscode/
 .idea/
 *.log
+
+# Local design references — not part of the deployed app
+CalmTube-screen-smile-handoff/
+icon-handoff/
+design_handoff_calmtube/
