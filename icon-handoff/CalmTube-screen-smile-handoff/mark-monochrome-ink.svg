@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="CalmTube">
+  
+  <rect x="8" y="14" width="48" height="36" rx="7" fill="#15140F"></rect>
+  
+  <rect x="13" y="19" width="38" height="26" rx="3.2" fill="#ffffff"></rect>
+  
+  <path d="M21 33 Q 32 39, 43 33" stroke="#15140F" stroke-width="2.6" stroke-linecap="round" fill="none"></path>
+  
+  <rect x="27" y="50" width="10" height="2.4" rx="1.2" fill="#15140F"></rect>
+</svg>

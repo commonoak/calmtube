@@ -705,6 +705,15 @@ document.getElementById("header-logo-btn").addEventListener("click", () => {
   if (currentUserId || allChannels.length) showScreen("channels");
 });
 
+document.getElementById("how-it-works-btn").addEventListener("click", () => {
+  const hasChannels = currentUserId || allChannels.length;
+  document.getElementById("hero-back-btn").classList.toggle("hidden", !hasChannels);
+  document.getElementById("hero-version").classList.toggle("hidden", !!hasChannels);
+  showScreen("login");
+});
+
+document.getElementById("hero-back-btn").addEventListener("click", () => showScreen("channels"));
+
 document.getElementById("settings-btn").addEventListener("click", openSettings);
 
 document.getElementById("settings-back").addEventListener("click", () => showScreen("channels"));

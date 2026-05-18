@@ -151,6 +151,43 @@ body:has(#login-screen:not(.hidden)) #app-header {
   color: #B45309;
 }
 
+.header-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--ct-cream);
+  border: 1px solid var(--ct-hairline);
+  color: var(--ct-ink-soft);
+  font-family: var(--ct-sans);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.header-pill:active {
+  background: var(--ct-bg-deep);
+}
+
+.header-link {
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  font-family: var(--ct-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ct-ink-muted);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.header-link:active {
+  color: var(--ct-ink);
+}
+
 .parent-reset-btn {
   background: var(--ct-green-20);
   border: none;

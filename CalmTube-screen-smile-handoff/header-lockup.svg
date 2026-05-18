@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 56" width="280" height="56" role="img" aria-label="CalmTube">
+  
+  <g transform="translate(8,8) scale(0.625)">
+    <rect x="8" y="14" width="48" height="36" rx="7" fill="#3A7D7B"></rect>
+    <rect x="13" y="19" width="38" height="26" rx="3.2" fill="#F4EFE4"></rect>
+    <path d="M21 33 Q 32 39, 43 33" stroke="#3A7D7B" stroke-width="2.6" stroke-linecap="round" fill="none"></path>
+    <rect x="27" y="50" width="10" height="2.4" rx="1.2" fill="#3A7D7B"></rect>
+  </g>
+  
+  <text x="64" y="38" font-family="Lora, Georgia, serif" font-style="italic" font-size="32" fill="#15140F">Calm</text>
+  <text x="138" y="38" font-family="DM Sans, system-ui, sans-serif" font-weight="600" font-size="32" fill="#3A7D7B">tube</text>
+</svg>
