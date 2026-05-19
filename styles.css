@@ -38,7 +38,8 @@ html, body {
 body {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 /* ── Wordmark ── */
@@ -822,6 +823,7 @@ main {
 
 #channels-screen {
   padding: 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
 .channels-grid {
