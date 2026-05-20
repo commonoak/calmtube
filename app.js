@@ -586,7 +586,7 @@ async function openChannel(channelId, title, avatarUrl = "") {
   document.getElementById("videos-grid").innerHTML = "";
   document.getElementById("load-more-container").classList.add("hidden");
 
-  document.getElementById("channel-detail-body").scrollTop = 0;
+  document.getElementById("channel-detail-screen").scrollTop = 0;
   history.pushState({ screen: "channelDetail", channelId, channelTitle: title }, "");
   showScreen("channelDetail");
   await loadVideos(false);
